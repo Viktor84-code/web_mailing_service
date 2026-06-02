@@ -1,0 +1,41 @@
+[project]
+name = "web_mailing_service"
+version = "0.1.0"
+description = "Сервис управления рассылками на Django"
+requires-python = ">=3.11"
+dependencies = [
+    "django>=6.0",
+    "psycopg2-binary>=2.9",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-django>=4.8",
+    "black>=24.0",
+    "isort>=5.13",
+    "flake8>=7.0",
+    "mypy>=1.0",
+    "pydocstyle>=6.3",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = "test_*.py"
