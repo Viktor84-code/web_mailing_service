@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Рассылка #{{ mailing.id }}</h1>
+<p>Статус: {{ mailing.get_status_display }}</p>
+<p>Дата начала: {{ mailing.first_sent_at }}</p>
+<p>Дата окончания: {{ mailing.end_at }}</p>
+<p>Сообщение: {{ mailing.message.subject }}</p>
+<p>Получатели:</p>
+<ul>
+    {% for client in mailing.recipients.all %}
+    <li>{{ client.full_name }} - {{ client.email }}</li>
+    {% endfor %}
+</ul>
+<a href="{% url 'mailings:update' mailing.pk %}" class="btn btn-outline-success">Редактировать</a>
+<a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-outline-danger">Удалить</a>
+<a href="{% url 'mailings:list' %}" class="btn btn-secondary">Назад к списку</a>
+{% endblock %}
