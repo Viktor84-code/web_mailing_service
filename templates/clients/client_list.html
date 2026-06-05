@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Список клиентов</title>
+</head>
+<body>
+    <h1>Клиенты</h1>
+    <a href="{% url 'clients:create' %}">Добавить клиента</a>
+    <ul>
+        {% for client in clients %}
+            <li>
+                {{ client.full_name }} - {{ client.email }}
+                <a href="{% url 'clients:update' client.pk %}">Редактировать</a>
+                <a href="{% url 'clients:delete' client.pk %}">Удалить</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

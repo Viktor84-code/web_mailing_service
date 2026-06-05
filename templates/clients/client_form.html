@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Форма клиента</title>
+</head>
+<body>
+    <h1>{% if object %}Редактировать{% else %}Добавить{% endif %} клиента</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Сохранить</button>
+    </form>
+    <a href="{% url 'clients:list' %}">Назад к списку</a>
+</body>
+</html>
