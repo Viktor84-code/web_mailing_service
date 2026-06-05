@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Сервис рассылок{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: white;
+            color: #212529;
+        }
+        a, a:hover {
+            color: #198754;
+        }
+        .btn-success {
+            background-color: #198754;
+            border-color: #198754;
+        }
+        .btn-outline-success {
+            color: #198754;
+            border-color: #198754;
+        }
+        .btn-outline-success:hover {
+            background-color: #198754;
+            color: white;
+        }
+        .nav-link {
+            color: #198754;
+        }
+        .nav-link:hover {
+            color: #0f5132;
+        }
+        .navbar-brand {
+            color: #198754 !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'main:home' %}">📧 Сервис рассылок</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="{% url 'clients:list' %}">Клиенты</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'email_messages:list' %}">Сообщения</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'mailings:list' %}">Рассылки</a></li>
+                <li class="nav-item"><a class="nav-link" href="/admin/">Админка</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container mt-4">
+    {% block content %}
+    {% endblock %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -7,6 +7,8 @@ dependencies = [
     "django>=6.0",
     "psycopg2-binary>=2.9",
     "python-dotenv>=1.0",
+    "django-admin-interface>=0.28.0",
+    "django-colorfield>=0.11.0",
 ]
 
 [project.optional-dependencies]
@@ -25,12 +27,12 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
-line-length = 88
+line-length = 120
 target-version = ['py311']
 
 [tool.isort]
 profile = "black"
-line_length = 88
+line_length = 120
 
 [tool.mypy]
 python_version = "3.11"

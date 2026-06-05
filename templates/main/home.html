@@ -1,16 +1,34 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Сервис рассылок</title>
-</head>
-<body>
-    <h1>Сервис управления рассылками</h1>
-    <nav>
-        <ul>
-            <li><a href="{% url 'clients:list' %}">Клиенты</a></li>
-            <li><a href="/admin/">Админка</a></li>
-        </ul>
-    </nav>
-    <p>Добро пожаловать! Здесь будет статистика и управление рассылками.</p>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Сервис управления рассылками</h1>
+<p>Добро пожаловать! Здесь будет статистика и управление рассылками.</p>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">Всего рассылок</div>
+            <div class="card-body">
+                <h5 class="card-title">{{ total_mailings|default:0 }}</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header">Активных рассылок</div>
+            <div class="card-body">
+                <h5 class="card-title">{{ active_mailings|default:0 }}</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-secondary mb-3">
+            <div class="card-header">Уникальных клиентов</div>
+            <div class="card-body">
+                <h5 class="card-title">{{ unique_clients|default:0 }}</h5>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

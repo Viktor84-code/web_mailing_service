@@ -23,4 +23,5 @@ urlpatterns = [
     path('clients/', include('clients.urls')),
     path('', include('main.urls')),
     path('messages/', include('email_messages.urls')),
+    path('mailings/', include('mailings.urls')),
 ]
