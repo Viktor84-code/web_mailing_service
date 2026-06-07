@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
@@ -23,12 +25,41 @@ class Mailing(models.Model):
     def __str__(self):
         return f"Рассылка #{self.id} - {self.get_status_display()}"
 
+    def update_status(self):
+        now = timezone.now()
+        print(f"[DEBUG] now = {now}, first_sent_at = {self.first_sent_at}, end_at = {self.end_at}")
+
+        if now < self.first_sent_at:
+            new_status = 'created'
+        elif self.first_sent_at <= now <= self.end_at:
+            new_status = 'started'
+        else:
+            new_status = 'completed'
+
+        print(f"[DEBUG] new_status = {new_status}, old status = {self.status}")
+
+        if self.status != new_status:
+            self.status = new_status
+            self.save()
+            print(f"[DEBUG] статус обновлён на {new_status}")
+
     def send(self):
-        from .models import MailingAttempt  # импорт внутри метода, чтобы избежать цикла
+        from .models import MailingAttempt
+        now = timezone.now()
+        if not (self.first_sent_at <= now <= self.end_at):
+            start_str = self.first_sent_at.strftime("%d.%m.%Y %H:%M")
+            end_str = self.end_at.strftime("%d.%m.%Y %H:%M")
+            raise ValueError(f"Рассылка может быть отправлена только с {start_str} по {end_str}")
         success_count = 0
         for client in self.recipients.all():
             try:
-                send_mail(...)
+                send_mail(
+                    subject=self.message.subject,
+                    message=self.message.body,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[client.email],
+                    fail_silently=False,
+                )
                 MailingAttempt.objects.create(
                     mailing=self,
                     status='success',
@@ -40,14 +71,19 @@ class Mailing(models.Model):
                     mailing=self,
                     status='failed',
                     server_response=str(e)
-
                 )
         if not self.is_sent and success_count > 0:
             self.is_sent = True
             self.status = 'started'
             self.save()
-
         return success_count
+
+    def clean(self):
+        if self.first_sent_at and self.end_at:
+            if self.first_sent_at >= self.end_at:
+                raise ValidationError('Дата начала должна быть раньше даты окончания.')
+            if self.first_sent_at < timezone.now():
+                raise ValidationError('Дата начала не может быть в прошлом.')
 
 
 class MailingAttempt(models.Model):
@@ -63,13 +99,3 @@ class MailingAttempt(models.Model):
 
     def __str__(self):
         return f"Попытка #{self.id} - {self.get_status_display()}"
-
-    def update_status(self):
-        """Обновляет статус рассылки по правилам ТЗ"""
-        if self.status == 'completed':
-            return  # Завершённые не трогаем
-
-        if self.end_at < timezone.now():
-            self.status = 'completed'
-
-        self.save()

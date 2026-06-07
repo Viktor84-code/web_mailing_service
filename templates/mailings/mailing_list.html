@@ -8,6 +8,10 @@
     <li class="list-group-item d-flex justify-content-between align-items-center">
         Рассылка #{{ mailing.id }} - {{ mailing.get_status_display }}
         <div>
+            <form method="post" action="{% url 'mailings:send' mailing.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-warning">Отправить</button>
+            </form>
             <a href="{% url 'mailings:detail' mailing.pk %}" class="btn btn-sm btn-outline-info">Просмотр</a>
             <a href="{% url 'mailings:update' mailing.pk %}" class="btn btn-sm btn-outline-success">Ред</a>
             <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-sm btn-outline-danger">Уд</a>
