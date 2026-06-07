@@ -16,9 +16,14 @@
 - Управление клиентами (CRUD)
 - Управление сообщениями (CRUD)
 - Управление рассылками (CRUD)
+- Динамический статус рассылки (Создана / Запущена / Завершена)
 - Отправка писем по требованию (интерфейс + команда)
-- Автоматические попытки рассылок (MailingAttempt)
+- Проверка времени отправки (только в интервале start_time – end_time)
+- Фиксация попыток рассылок (MailingAttempt)
 - Статистика на главной странице
+- Валидация дат (start_time не в прошлом, start_time < end_time)
+- Человеко-читаемые сообщения об ошибках (с датами по МСК)
+- Зелёная тема Bootstrap
 
 ## Установка и запуск
 
@@ -31,3 +36,10 @@ pip install -e .[dev]
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
+```
+
+## Команды
+
+- Запуск сервера: `python manage.py runserver`
+- Создание суперпользователя: `python manage.py createsuperuser`
+- Отправка рассылки: `python manage.py send_mailing <id>`

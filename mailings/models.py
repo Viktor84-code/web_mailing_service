@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
@@ -15,7 +17,7 @@ class Mailing(models.Model):
         ('completed', 'Завершена'),
     ]
 
-    first_sent_at = models.DateTimeField(verbose_name="Дата и время первой отправки")
+    first_sent_at = models.DateTimeField(verbose_name="Дата и время начала отправки")
     end_at = models.DateTimeField(verbose_name="Дата и время окончания отправки")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='created', verbose_name="Статус")
     message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name="Сообщение")
@@ -47,8 +49,11 @@ class Mailing(models.Model):
         from .models import MailingAttempt
         now = timezone.now()
         if not (self.first_sent_at <= now <= self.end_at):
-            start_str = self.first_sent_at.strftime("%d.%m.%Y %H:%M")
-            end_str = self.end_at.strftime("%d.%m.%Y %H:%M")
+            msk_timezone = timedelta(hours=3)  # Москва UTC+3
+            start_msk = self.first_sent_at + msk_timezone
+            end_msk = self.end_at + msk_timezone
+            start_str = start_msk.strftime("%d.%m.%Y %H:%M")
+            end_str = end_msk.strftime("%d.%m.%Y %H:%M")
             raise ValueError(f"Рассылка может быть отправлена только с {start_str} по {end_str}")
         success_count = 0
         for client in self.recipients.all():
