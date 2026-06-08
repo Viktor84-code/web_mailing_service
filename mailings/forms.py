@@ -1,3 +1,5 @@
+"""Формы для приложения mailings."""
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -6,6 +8,8 @@ from .models import Mailing
 
 
 class MailingForm(forms.ModelForm):
+    """Форма для создания и редактирования рассылки с валидацией дат."""
+
     class Meta:
         model = Mailing
         fields = "__all__"

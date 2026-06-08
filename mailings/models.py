@@ -1,3 +1,7 @@
+"""
+Модели для управления рассылками и фиксации попыток отправки.
+"""
+
 from datetime import timedelta
 
 from django.conf import settings
@@ -11,6 +15,8 @@ from email_messages.models import Message
 
 
 class Mailing(models.Model):
+    """Модель рассылки с параметрами и статусом."""
+
     STATUS_CHOICES = [
         ("created", "Создана"),
         ("started", "Запущена"),
@@ -28,6 +34,7 @@ class Mailing(models.Model):
         return f"Рассылка #{self.id} - {self.get_status_display()}"
 
     def update_status(self):
+        """Обновляет статус рассылки на основе текущего времени и дат start/end."""
         now = timezone.now()
         print(f"[DEBUG] now = {now}, first_sent_at = {self.first_sent_at}, end_at = {self.end_at}")
 
@@ -46,6 +53,8 @@ class Mailing(models.Model):
             print(f"[DEBUG] статус обновлён на {new_status}")
 
     def send(self):
+        """Отправляет рассылку всем получателям, фиксирует попытки."""
+
         from .models import MailingAttempt
 
         now = timezone.now()
@@ -77,6 +86,7 @@ class Mailing(models.Model):
         return success_count
 
     def clean(self):
+        """Валидация дат рассылки."""
         if self.first_sent_at and self.end_at:
             if self.first_sent_at >= self.end_at:
                 raise ValidationError("Дата начала должна быть раньше даты окончания.")
@@ -85,6 +95,8 @@ class Mailing(models.Model):
 
 
 class MailingAttempt(models.Model):
+    """Модель попытки отправки письма для конкретной рассылки."""
+
     STATUS_CHOICES = [
         ("success", "Успешно"),
         ("failed", "Не успешно"),

@@ -1,3 +1,5 @@
+"""Контроллер для главной страницы со статистикой."""
+
 from django.shortcuts import render
 
 from clients.models import Client
@@ -5,6 +7,8 @@ from mailings.models import Mailing
 
 
 def home(request):
+    """Отображает главную страницу со статистикой."""
+
     total_mailings = Mailing.objects.count()
     active_mailings = Mailing.objects.filter(status="started").count()
     unique_clients = Client.objects.count()

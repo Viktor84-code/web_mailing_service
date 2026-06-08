@@ -1,3 +1,5 @@
+"""URL-маршруты для приложения main."""
+
 from django.urls import path
 
 from . import views

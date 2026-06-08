@@ -1,3 +1,5 @@
+"""Контроллеры (CBV) для управления рассылками."""
+
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -9,6 +11,8 @@ from .models import Mailing
 
 
 class MailingListView(ListView):
+    """Отображает список всех рассылок с обновлением статусов."""
+
     model = Mailing
     template_name = "mailings/mailing_list.html"
     context_object_name = "mailings"
@@ -21,6 +25,8 @@ class MailingListView(ListView):
 
 
 class MailingDetailView(DetailView):
+    """Отображает детальную страницу рассылки."""
+
     model = Mailing
     template_name = "mailings/mailing_detail.html"
     context_object_name = "mailing"
@@ -32,6 +38,8 @@ class MailingDetailView(DetailView):
 
 
 class MailingCreateView(CreateView):
+    """Создаёт новую рассылку."""
+
     model = Mailing
     form_class = MailingForm
     template_name = "mailings/mailing_form.html"
@@ -39,6 +47,8 @@ class MailingCreateView(CreateView):
 
 
 class MailingUpdateView(UpdateView):
+    """Редактирует существующую рассылку."""
+
     model = Mailing
     form_class = MailingForm
     template_name = "mailings/mailing_form.html"
@@ -46,13 +56,18 @@ class MailingUpdateView(UpdateView):
 
 
 class MailingDeleteView(DeleteView):
+    """Удаляет рассылку."""
+
     model = Mailing
     template_name = "mailings/mailing_confirm_delete.html"
     success_url = reverse_lazy("mailings:list")
 
 
 class MailingSendView(View):
+    """Контроллер для ручной отправки рассылки (POST-запрос)."""
+
     def post(self, request, pk):
+        """Обрабатывает POST-запрос на отправку рассылки."""
         mailing = get_object_or_404(Mailing, pk=pk)
         try:
             mailing.send()
