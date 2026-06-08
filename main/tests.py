@@ -12,7 +12,6 @@ from mailings.models import Mailing
 @pytest.mark.django_db
 class TestMain:
 
-
     def test_home_page_stats(self, client):  # ← добавили client в аргументы
         # Создаём клиентов
         Client.objects.create(email="a@a.com", full_name="A")

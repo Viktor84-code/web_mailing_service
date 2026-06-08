@@ -43,3 +43,12 @@ python manage.py runserver
 - Запуск сервера: `python manage.py runserver`
 - Создание суперпользователя: `python manage.py createsuperuser`
 - Отправка рассылки: `python manage.py send_mailing <id>`
+
+## Тестирование и качество кода
+
+- **Покрытие тестами: 88%**
+- **Тесты:** pytest, pytest-django, pytest-cov
+- **Линтеры:** flake8 (0 ошибок)
+- **Форматирование:** black, isort
+- **Типизация:** mypy (в процессе)
+- **Докстринги:** pydocstyle (в процессе)

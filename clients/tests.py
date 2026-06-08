@@ -12,8 +12,7 @@ class TestClients:
         assert client.email == "test@example.com"
         assert str(client) == "Test User"
 
-
-    def test_client_list_view(self,client):
+    def test_client_list_view(self, client):
         Client.objects.create(email="a@a.com", full_name="A")
         Client.objects.create(email="b@b.com", full_name="B")
         url = reverse("clients:list")

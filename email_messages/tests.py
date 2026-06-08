@@ -7,7 +7,6 @@ from email_messages.models import Message
 @pytest.mark.django_db
 class TestMessages:
 
-
     def test_message_creation(self):
         message = Message.objects.create(subject="Test Subject", body="Test Body")
         assert message.subject == "Test Subject"
