@@ -40,7 +40,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
-python_files = "test_*.py"
+python_files = "tests.py"
 addopts = "--cov=clients --cov=email_messages --cov=mailings --cov=main"
 
 [tool.pydocstyle]

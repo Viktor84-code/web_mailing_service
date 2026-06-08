@@ -12,14 +12,14 @@ from email_messages.models import Message
 
 class Mailing(models.Model):
     STATUS_CHOICES = [
-        ('created', 'Создана'),
-        ('started', 'Запущена'),
-        ('completed', 'Завершена'),
+        ("created", "Создана"),
+        ("started", "Запущена"),
+        ("completed", "Завершена"),
     ]
 
     first_sent_at = models.DateTimeField(verbose_name="Дата и время начала отправки")
     end_at = models.DateTimeField(verbose_name="Дата и время окончания отправки")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='created', verbose_name="Статус")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="created", verbose_name="Статус")
     message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name="Сообщение")
     recipients = models.ManyToManyField(Client, verbose_name="Получатели")
     is_sent = models.BooleanField(default=False, verbose_name="Была ли отправка")
@@ -32,11 +32,11 @@ class Mailing(models.Model):
         print(f"[DEBUG] now = {now}, first_sent_at = {self.first_sent_at}, end_at = {self.end_at}")
 
         if now < self.first_sent_at:
-            new_status = 'created'
+            new_status = "created"
         elif self.first_sent_at <= now <= self.end_at:
-            new_status = 'started'
+            new_status = "started"
         else:
-            new_status = 'completed'
+            new_status = "completed"
 
         print(f"[DEBUG] new_status = {new_status}, old status = {self.status}")
 
@@ -47,6 +47,7 @@ class Mailing(models.Model):
 
     def send(self):
         from .models import MailingAttempt
+
         now = timezone.now()
         if not (self.first_sent_at <= now <= self.end_at):
             msk_timezone = timedelta(hours=3)  # Москва UTC+3
@@ -65,36 +66,28 @@ class Mailing(models.Model):
                     recipient_list=[client.email],
                     fail_silently=False,
                 )
-                MailingAttempt.objects.create(
-                    mailing=self,
-                    status='success',
-                    server_response='OK'
-                )
+                MailingAttempt.objects.create(mailing=self, status="success", server_response="OK")
                 success_count += 1
             except Exception as e:
-                MailingAttempt.objects.create(
-                    mailing=self,
-                    status='failed',
-                    server_response=str(e)
-                )
+                MailingAttempt.objects.create(mailing=self, status="failed", server_response=str(e))
         if not self.is_sent and success_count > 0:
             self.is_sent = True
-            self.status = 'started'
+            self.status = "started"
             self.save()
         return success_count
 
     def clean(self):
         if self.first_sent_at and self.end_at:
             if self.first_sent_at >= self.end_at:
-                raise ValidationError('Дата начала должна быть раньше даты окончания.')
+                raise ValidationError("Дата начала должна быть раньше даты окончания.")
             if self.first_sent_at < timezone.now():
-                raise ValidationError('Дата начала не может быть в прошлом.')
+                raise ValidationError("Дата начала не может быть в прошлом.")
 
 
 class MailingAttempt(models.Model):
     STATUS_CHOICES = [
-        ('success', 'Успешно'),
-        ('failed', 'Не успешно'),
+        ("success", "Успешно"),
+        ("failed", "Не успешно"),
     ]
 
     mailing = models.ForeignKey(Mailing, on_delete=models.CASCADE, verbose_name="Рассылка")

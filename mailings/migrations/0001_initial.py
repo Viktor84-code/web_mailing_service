@@ -32,9 +32,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "end_at",
-                    models.DateTimeField(
-                        verbose_name="Дата и время окончания отправки"
-                    ),
+                    models.DateTimeField(verbose_name="Дата и время окончания отправки"),
                 ),
                 (
                     "status",
@@ -59,9 +57,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "recipients",
-                    models.ManyToManyField(
-                        to="clients.client", verbose_name="Получатели"
-                    ),
+                    models.ManyToManyField(to="clients.client", verbose_name="Получатели"),
                 ),
             ],
         ),

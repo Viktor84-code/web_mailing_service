@@ -24,9 +24,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "email",
-                    models.EmailField(
-                        max_length=254, unique=True, verbose_name="Email"
-                    ),
+                    models.EmailField(max_length=254, unique=True, verbose_name="Email"),
                 ),
                 (
                     "full_name",
