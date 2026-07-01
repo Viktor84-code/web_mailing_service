@@ -20,6 +20,7 @@ dev = [
     "flake8>=7.0",
     "mypy>=1.0",
     "pydocstyle>=6.3",
+    "python-dotenv>=1.0",
 ]
 
 [build-system]
