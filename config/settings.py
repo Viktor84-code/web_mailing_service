@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "main",
     "email_messages",
     "mailings",
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -104,6 +105,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
 LANGUAGE_CODE = "ru-ru"
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = 'users:login'
 
 TIME_ZONE = "Europe/Moscow"
 
