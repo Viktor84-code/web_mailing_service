@@ -29,6 +29,7 @@ class Mailing(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name="Сообщение")
     recipients = models.ManyToManyField(Client, verbose_name="Получатели")
     is_sent = models.BooleanField(default=False, verbose_name="Была ли отправка")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"Рассылка #{self.id} - {self.get_status_display()}"

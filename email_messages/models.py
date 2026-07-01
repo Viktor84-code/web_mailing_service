@@ -2,6 +2,7 @@
 Модель для управления сообщениями рассылок.
 """
 
+from django.conf import settings
 from django.db import models
 
 
@@ -10,6 +11,7 @@ class Message(models.Model):
 
     subject = models.CharField(max_length=255, verbose_name="Тема письма")
     body = models.TextField(verbose_name="Тело письма")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         """Возвращает тему сообщения."""

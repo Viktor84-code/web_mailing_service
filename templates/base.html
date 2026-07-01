@@ -50,6 +50,21 @@
                 <li class="nav-item"><a class="nav-link" href="{% url 'email_messages:list' %}">Сообщения</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'mailings:list' %}">Рассылки</a></li>
                 <li class="nav-item"><a class="nav-link" href="/admin/">Админка</a></li>
+
+                {% if user.is_authenticated %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'users:profile' %}">{{ user.username }}</a></li>
+                <li class="nav-item">
+                    <form method="post" action="{% url 'users:logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link nav-link"
+                                style="display: inline; padding: 0; border: none; background: none;">Выйти
+                        </button>
+                    </form>
+                </li>
+                {% else %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'users:login' %}">Войти</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'users:register' %}">Регистрация</a></li>
+                {% endif %}
             </ul>
         </div>
     </div>

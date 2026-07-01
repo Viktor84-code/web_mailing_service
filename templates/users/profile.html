@@ -1,3 +1,5 @@
+{% extends 'base.html' %}
+
 {% block content %}
 <div class="row">
     <div class="col-md-8">
@@ -5,7 +7,20 @@
         <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
         <p><strong>Email:</strong> {{ user.email }}</p>
         <p><strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y" }}</p>
-        <a href="{% url 'users:logout' %}" class="btn btn-danger">Выйти</a>
+
+        <h3 class="mt-4">Статистика рассылок</h3>
+        <ul class="list-group">
+            <li class="list-group-item">Всего рассылок: <span class="badge bg-primary">{{ total_mailings }}</span></li>
+            <li class="list-group-item">Всего попыток: <span class="badge bg-secondary">{{ total_attempts }}</span></li>
+            <li class="list-group-item">Успешных: <span class="badge bg-success">{{ success_attempts }}</span></li>
+            <li class="list-group-item">Неуспешных: <span class="badge bg-danger">{{ failed_attempts }}</span></li>
+            <li class="list-group-item">Отправлено писем: <span class="badge bg-info">{{ sent_messages }}</span></li>
+        </ul>
+
+        <form method="post" action="{% url 'users:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Выйти</button>
+        </form>
     </div>
 </div>
 {% endblock %}

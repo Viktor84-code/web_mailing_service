@@ -13,6 +13,9 @@ class ClientListView(ListView):
     template_name = "clients/client_list.html"
     context_object_name = "clients"
 
+    def get_queryset(self):
+        return super().get_queryset().filter(owner=self.request.user)
+
 
 class ClientCreateView(CreateView):
     """Создаёт нового клиента."""
@@ -21,6 +24,10 @@ class ClientCreateView(CreateView):
     fields = ["email", "full_name", "comment"]
     template_name = "clients/client_form.html"
     success_url = reverse_lazy("clients:list")
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
 
 class ClientUpdateView(UpdateView):

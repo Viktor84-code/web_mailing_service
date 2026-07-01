@@ -23,6 +23,9 @@ class MailingListView(ListView):
             mailing.update_status()  # ← обновляем статус у каждой рассылки
         return queryset
 
+    def get_queryset(self):
+        return super().get_queryset().filter(owner=self.request.user)
+
 
 class MailingDetailView(DetailView):
     """Отображает детальную страницу рассылки."""
@@ -44,6 +47,10 @@ class MailingCreateView(CreateView):
     form_class = MailingForm
     template_name = "mailings/mailing_form.html"
     success_url = reverse_lazy("mailings:list")
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
 
 class MailingUpdateView(UpdateView):

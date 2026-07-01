@@ -13,6 +13,9 @@ class MessageListView(ListView):
     template_name = "email_messages/message_list.html"
     context_object_name = "messages"
 
+    def get_queryset(self):
+        return super().get_queryset().filter(owner=self.request.user)
+
 
 class MessageCreateView(CreateView):
     """Создаёт новое сообщение."""
@@ -21,6 +24,10 @@ class MessageCreateView(CreateView):
     fields = ["subject", "body"]
     template_name = "email_messages/message_form.html"
     success_url = reverse_lazy("email_messages:list")
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
 
 class MessageUpdateView(UpdateView):
