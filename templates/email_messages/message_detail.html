@@ -3,7 +3,11 @@
 {% block content %}
 <h1>{{ message.subject }}</h1>
 <p>{{ message.body|linebreaks }}</p>
+
+{% if not user.groups.all.0.name == 'Менеджер' %}
 <a href="{% url 'email_messages:update' message.pk %}" class="btn btn-outline-success">Редактировать</a>
 <a href="{% url 'email_messages:delete' message.pk %}" class="btn btn-outline-danger">Удалить</a>
+{% endif %}
+
 <a href="{% url 'email_messages:list' %}" class="btn btn-secondary">Назад к списку</a>
 {% endblock %}

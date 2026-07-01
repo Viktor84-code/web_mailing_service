@@ -24,4 +24,5 @@ urlpatterns = [
          auth_views.PasswordResetCompleteView.as_view(template_name='users/password_reset_complete.html'),
          name='password_reset_complete'),
     path('accounts/profile/', lambda request: redirect('/'), name='profile_redirect'),
+    # path('users/', UserListView.as_view(), name='user_list'),
 ]

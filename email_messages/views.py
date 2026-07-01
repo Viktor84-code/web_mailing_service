@@ -2,11 +2,11 @@
 
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
-
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Message
 
 
-class MessageListView(ListView):
+class MessageListView(LoginRequiredMixin, ListView):
     """Отображает список всех сообщений."""
 
     model = Message
@@ -14,10 +14,12 @@ class MessageListView(ListView):
     context_object_name = "messages"
 
     def get_queryset(self):
-        return super().get_queryset().filter(owner=self.request.user)
+        if self.request.user.groups.filter(name='Менеджер').exists():
+            return Message.objects.all()
+        return Message.objects.filter(owner=self.request.user)
 
 
-class MessageCreateView(CreateView):
+class MessageCreateView(LoginRequiredMixin, CreateView):
     """Создаёт новое сообщение."""
 
     model = Message
@@ -47,7 +49,7 @@ class MessageDeleteView(DeleteView):
     success_url = reverse_lazy("email_messages:list")
 
 
-class MessageDetailView(DetailView):
+class MessageDetailView(LoginRequiredMixin, DetailView):
     """Отображает детальную страницу сообщения."""
 
     model = Message

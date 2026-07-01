@@ -5,12 +5,12 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
-
+from .services import MailingService
 from .forms import MailingForm
 from .models import Mailing
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-
-class MailingListView(ListView):
+class MailingListView(LoginRequiredMixin, ListView):
     """Отображает список всех рассылок с обновлением статусов."""
 
     model = Mailing
@@ -24,10 +24,12 @@ class MailingListView(ListView):
         return queryset
 
     def get_queryset(self):
-        return super().get_queryset().filter(owner=self.request.user)
+        if self.request.user.groups.filter(name='Менеджер').exists():
+            return Mailing.objects.all()
+        return Mailing.objects.filter(owner=self.request.user)
 
 
-class MailingDetailView(DetailView):
+class MailingDetailView(LoginRequiredMixin, DetailView):
     """Отображает детальную страницу рассылки."""
 
     model = Mailing
@@ -53,7 +55,7 @@ class MailingCreateView(CreateView):
         return super().form_valid(form)
 
 
-class MailingUpdateView(UpdateView):
+class MailingUpdateView(LoginRequiredMixin, UpdateView):
     """Редактирует существующую рассылку."""
 
     model = Mailing
@@ -62,7 +64,7 @@ class MailingUpdateView(UpdateView):
     success_url = reverse_lazy("mailings:list")
 
 
-class MailingDeleteView(DeleteView):
+class MailingDeleteView(LoginRequiredMixin, DeleteView):
     """Удаляет рассылку."""
 
     model = Mailing
@@ -70,7 +72,7 @@ class MailingDeleteView(DeleteView):
     success_url = reverse_lazy("mailings:list")
 
 
-class MailingSendView(View):
+class MailingSendView(LoginRequiredMixin, View):
     """Контроллер для ручной отправки рассылки (POST-запрос)."""
 
     def post(self, request, pk):

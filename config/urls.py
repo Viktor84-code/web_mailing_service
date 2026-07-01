@@ -12,5 +12,4 @@ urlpatterns = [
     path("mailings/", include("mailings.urls")),
     path('users/', include('users.urls')),
     path('accounts/profile/', lambda request: redirect('/')),
-    path('', include('django.contrib.auth.urls')),
 ]

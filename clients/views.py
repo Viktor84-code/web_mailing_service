@@ -1,12 +1,15 @@
 """Контроллеры (CBV) для управления клиентами."""
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
+from .forms import ClientForm
 from .models import Client
 
 
-class ClientListView(ListView):
+class ClientListView(LoginRequiredMixin, ListView):
     """Отображает список всех клиентов."""
 
     model = Client
@@ -14,10 +17,12 @@ class ClientListView(ListView):
     context_object_name = "clients"
 
     def get_queryset(self):
-        return super().get_queryset().filter(owner=self.request.user)
+        if self.request.user.groups.filter(name='Менеджер').exists():
+            return Client.objects.all()  # Менеджер видит всех
+        return Client.objects.filter(owner=self.request.user)
 
 
-class ClientCreateView(CreateView):
+class ClientCreateView(LoginRequiredMixin, CreateView):
     """Создаёт нового клиента."""
 
     model = Client
@@ -30,16 +35,24 @@ class ClientCreateView(CreateView):
         return super().form_valid(form)
 
 
-class ClientUpdateView(UpdateView):
+class ClientUpdateView(LoginRequiredMixin, UpdateView):
     """Редактирует существующего клиента."""
 
     model = Client
-    fields = ["email", "full_name", "comment"]
-    template_name = "clients/client_form.html"
-    success_url = reverse_lazy("clients:list")
+    form_class = ClientForm
+    template_name = 'clients/client_form.html'
+    success_url = reverse_lazy('clients:list')
+
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if request.user.groups.filter(name='Менеджер').exists():
+            raise PermissionDenied("Менеджеры не могут редактировать клиентов")
+        if obj.owner != request.user:
+            raise PermissionDenied("Вы не можете редактировать этот объект")
+        return super().dispatch(request, *args, **kwargs)
 
 
-class ClientDeleteView(DeleteView):
+class ClientDeleteView(LoginRequiredMixin, DeleteView):
     """Удаляет клиента."""
 
     model = Client
