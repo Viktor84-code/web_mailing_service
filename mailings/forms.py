@@ -60,16 +60,4 @@ class MailingForm(forms.ModelForm):
                 "Дата начала должна быть раньше даты окончания."
             )
 
-        # Проверка что начало не в прошлом (только для новых рассылок)
-        if not self.instance.pk and first_sent_at < timezone.now():
-            raise ValidationError(
-                "Дата начала не может быть в прошлом."
-            )
-
-        # Проверка что окончание не в прошлом
-        if end_at < timezone.now():
-            raise ValidationError(
-                "Дата окончания не может быть в прошлом."
-            )
-
         return cleaned_data

@@ -2,17 +2,18 @@
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.views.decorators.cache import cache_page
 
 from clients.models import Client
 from mailings.models import Mailing
 
 
+@cache_page(60 * 5)  # Кэшировать на 5 минут
 @login_required
 def home(request):
     """Отображает главную страницу со статистикой."""
     user = request.user
 
-    # Фильтрация по правам
     if user.is_superuser or user.groups.filter(name='Менеджер').exists():
         mailings = Mailing.objects.all()
         clients = Client.objects.all()
@@ -20,7 +21,6 @@ def home(request):
         mailings = Mailing.objects.filter(owner=user)
         clients = Client.objects.filter(owner=user)
 
-    # Статистика
     total_mailings = mailings.count()
     active_mailings = mailings.filter(
         status__in=['created', 'started']

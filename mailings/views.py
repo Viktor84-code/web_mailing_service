@@ -4,7 +4,9 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.cache import cache_page
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from .forms import MailingForm
@@ -60,6 +62,7 @@ class MailingListView(LoginRequiredMixin, ListView):
         return queryset
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")
 class MailingDetailView(LoginRequiredMixin, OwnerOrManagerMixin, DetailView):
     """Отображает детальную страницу рассылки."""
 

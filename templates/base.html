@@ -61,19 +61,16 @@
                 <li class="nav-item"><a class="nav-link" href="{% url 'email_messages:list' %}">Сообщения</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'mailings:list' %}">Рассылки</a></li>
                 {% if user.is_staff or user.is_superuser %}
-                <li class="nav-item"><a class="nav-link" href="/admin/">Админка</a></li>
+                <li class="nav-item">
+                    <a class="nav-link text-warning" href="/admin/">
+                        <i class="fas fa-cog"></i> Админка
+                    </a>
+                </li>
                 {% endif %}
                 <li class="nav-item"><a class="nav-link" href="{% url 'users:profile' %}">{{ user.username }}</a></li>
                 <li class="nav-item">
                     <form method="post" action="{% url 'users:logout' %}" style="display: inline;">
                         {% csrf_token %}
-                        {% if user.is_staff or user.is_superuser %}
-                        <li class="nav-item">
-                            <a class="nav-link text-warning" href="/admin/">
-                                <i class="fas fa-cog"></i> Админка
-                            </a>
-                        </li>
-                        {% endif %}
                         <button type="submit" class="btn btn-link nav-link"
                                 style="display: inline; padding: 0; border: none; background: none;">Выйти
                         </button>
@@ -89,7 +86,6 @@
 </nav>
 
 <div class="container mt-4">
-    <!-- Блок для вывода сообщений -->
     {% if messages %}
     <div class="alert-messages">
         {% for message in messages %}
