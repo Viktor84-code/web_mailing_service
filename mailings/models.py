@@ -81,17 +81,12 @@ class Mailing(models.Model):
 
     def clean(self):
         """Валидация дат."""
-        # Проверка что first_sent_at раньше end_at
+        if not self.first_sent_at or not self.end_at:
+            return
         if self.first_sent_at >= self.end_at:
-            raise ValidationError(
-                "Дата начала должна быть раньше даты окончания."
-            )
-
-        # Проверка что end_at не в прошлом (только для новых объектов)
+            raise ValidationError("Дата начала должна быть раньше даты окончания.")
         if not self.pk and self.end_at < timezone.now():
-            raise ValidationError(
-                "Дата окончания не может быть в прошлом."
-            )
+            raise ValidationError("Дата окончания не может быть в прошлом.")
 
 
 class MailingAttempt(models.Model):

@@ -35,13 +35,19 @@ class MailingService:
         Отправляет рассылку всем получателям.
         Возвращает словарь с результатами.
         """
+        print(f"DEBUG: Начинаем отправку рассылки #{mailing.id}")
+
         self._validate_mailing(mailing)
+        print("DEBUG: Валидация пройдена")
 
         results = []
         for client in mailing.recipients.all():
+            print(f"DEBUG: Отправка клиенту {client.email}")
             result = self._send_to_client(mailing, client)
             results.append(result)
+            print(f"DEBUG: Результат {result}")
 
+        print("DEBUG: Все письма отправлены")
         self._update_mailing_status(mailing, results)
 
         success_count = self._count_success(results)
@@ -59,13 +65,18 @@ class MailingService:
 
     def _validate_mailing(self, mailing):
         """Проверяет, можно ли отправить рассылку."""
-        now = timezone.now()
-        if not (mailing.first_sent_at <= now <= mailing.end_at):
-            raise ValueError("Рассылка неактивна в данный момент")
+        print(f"DEBUG: Валидация рассылки #{mailing.id}")
+
+        # Убрали проверку на время
         if not mailing.is_active:
+            print("DEBUG: Ошибка - рассылка отключена")
             raise ValueError("Рассылка отключена менеджером")
+
         if mailing.is_sent:
+            print("DEBUG: Ошибка - рассылка уже отправлена")
             raise ValueError("Рассылка уже была отправлена")
+
+        print("DEBUG: Валидация пройдена успешно")
 
     def _send_to_client(self, mailing, client):
         """Отправляет письмо одному клиенту и создает попытку."""
