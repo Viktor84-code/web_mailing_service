@@ -1,10 +1,44 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Удалить клиента {{ object.full_name }}?</h1>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger">Да, удалить</button>
-    <a href="{% url 'clients:list' %}" class="btn btn-secondary">Отмена</a>
-</form>
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">Подтверждение удаления</h4>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Вы действительно хотите удалить клиента?</h5>
+
+            <div class="alert alert-warning">
+                <strong>Внимание!</strong> Это действие необратимо.
+            </div>
+
+            <div class="mb-3">
+                <p><strong>Имя:</strong> {{ object.full_name }}</p>
+                <p><strong>Email:</strong> {{ object.email }}</p>
+                {% if object.comment %}
+                    <p><strong>Комментарий:</strong> {{ object.comment }}</p>
+                {% endif %}
+            </div>
+
+            {% if object.mailing_set.exists %}
+                <div class="alert alert-danger">
+                    <strong>Предупреждение!</strong>
+                    Этот клиент привязан к {{ object.mailing_set.count }} рассылке(ам).
+                    При удалении клиента, он будет удален из этих рассылок.
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Да, удалить
+                </button>
+                <a href="{% url 'clients:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

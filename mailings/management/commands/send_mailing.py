@@ -4,11 +4,15 @@
     python manage.py send_mailing 1
 """
 
+import logging
+
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from mailings.models import Mailing
 from mailings.services import MailingService
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -21,7 +25,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "mailing_id",
             type=int,
-            nargs="?",  # делаем аргумент опциональным
+            nargs="?",
             help="ID рассылки для отправки (если не указан - отправляются все активные)"
         )
 
@@ -30,10 +34,8 @@ class Command(BaseCommand):
         mailing_id = options.get("mailing_id")
 
         if mailing_id:
-            # Отправка конкретной рассылки
             self._send_single_mailing(mailing_id)
         else:
-            # Отправка всех активных рассылок
             self._send_all_active_mailings()
 
     def _send_single_mailing(self, mailing_id):
@@ -50,22 +52,35 @@ class Command(BaseCommand):
                 )
                 return
 
+            # Обновляем статус на "started"
+            mailing.status = "started"
+            mailing.save(update_fields=["status"])
+
             # Отправляем через сервис
-            count = MailingService.send_mailing(mailing)
+            result = MailingService.send_mailing(mailing)
+
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Рассылка #{mailing_id} отправлена, успешно: {count}"
+                    f"Рассылка #{mailing_id} отправлена. "
+                    f"Успешно: {result['success_count']}, "
+                    f"Ошибок: {result['failed_count']}"
                 )
+            )
+            logger.info(
+                f"Команда send_mailing: рассылка {mailing_id} отправлена. "
+                f"Успешно: {result['success_count']}, Ошибок: {result['failed_count']}"
             )
 
         except Mailing.DoesNotExist:
-            self.stdout.write(
-                self.style.ERROR(f"Рассылка #{mailing_id} не найдена")
-            )
+            msg = f"Рассылка #{mailing_id} не найдена"
+            self.stdout.write(self.style.ERROR(msg))
+            logger.error(msg)
         except ValueError as e:
             self.stdout.write(self.style.ERROR(str(e)))
+            logger.error(f"Ошибка валидации рассылки {mailing_id}: {e}")
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Ошибка: {e}"))
+            logger.error(f"Неизвестная ошибка при отправке рассылки {mailing_id}: {e}")
 
     def _send_all_active_mailings(self):
         """Отправляет все активные рассылки, которые можно отправить."""
@@ -77,7 +92,7 @@ class Command(BaseCommand):
             is_sent=False,
             first_sent_at__lte=now,
             end_at__gte=now
-        )
+        ).select_related("message")
 
         if not mailings.exists():
             self.stdout.write(
@@ -87,16 +102,34 @@ class Command(BaseCommand):
 
         total_sent = 0
         total_errors = 0
+        total_success_messages = 0
+        total_failed_messages = 0
 
         for mailing in mailings:
             try:
-                count = MailingService.send_mailing(mailing)
+                # Обновляем статус на "started"
+                mailing.status = "started"
+                mailing.save(update_fields=["status"])
+
+                # Отправляем через сервис
+                result = MailingService.send_mailing(mailing)
+
                 total_sent += 1
+                total_success_messages += result['success_count']
+                total_failed_messages += result['failed_count']
+
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"Рассылка #{mailing.id} отправлена, успешно: {count}"
+                        f"Рассылка #{mailing.id} отправлена. "
+                        f"Успешно: {result['success_count']}, "
+                        f"Ошибок: {result['failed_count']}"
                     )
                 )
+                logger.info(
+                    f"Рассылка {mailing.id} отправлена. "
+                    f"Успешно: {result['success_count']}, Ошибок: {result['failed_count']}"
+                )
+
             except Exception as e:
                 total_errors += 1
                 self.stdout.write(
@@ -104,9 +137,18 @@ class Command(BaseCommand):
                         f"Ошибка при отправке рассылки #{mailing.id}: {e}"
                     )
                 )
+                logger.error(f"Ошибка при отправке рассылки {mailing.id}: {e}")
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"\nГотово! Отправлено: {total_sent}, ошибок: {total_errors}"
+                f"\nГотово! Отправлено рассылок: {total_sent}, "
+                f"ошибок при отправке рассылок: {total_errors}\n"
+                f"Всего писем: успешно {total_success_messages}, "
+                f"ошибок {total_failed_messages}"
             )
+        )
+        logger.info(
+            f"Команда send_mailing завершена. "
+            f"Рассылок: {total_sent}, ошибок: {total_errors}. "
+            f"Писем: успешно {total_success_messages}, ошибок {total_failed_messages}"
         )

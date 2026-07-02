@@ -1,10 +1,47 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Удалить сообщение "{{ object.subject }}"?</h1>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger">Да, удалить</button>
-    <a href="{% url 'email_messages:list' %}" class="btn btn-secondary">Отмена</a>
-</form>
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">Подтверждение удаления</h4>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Вы действительно хотите удалить сообщение?</h5>
+
+            <div class="alert alert-warning">
+                <strong>Внимание!</strong> Это действие необратимо.
+            </div>
+
+            <div class="mb-3">
+                <p><strong>Тема:</strong> {{ object.subject }}</p>
+                <p><strong>Текст:</strong></p>
+                <div class="border p-3 bg-light rounded">
+                    {{ object.body|linebreaks|truncatewords:50 }}
+                </div>
+                {% if object.body|length > 200 %}
+                    <small class="text-muted">(показаны первые 50 слов)</small>
+                {% endif %}
+            </div>
+
+            {% if object.mailing_set.exists %}
+                <div class="alert alert-danger">
+                    <strong>Предупреждение!</strong>
+                    Это сообщение используется в {{ object.mailing_set.count }} рассылке(ах).
+                    При удалении сообщения, эти рассылки будут удалены.
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Да, удалить
+                </button>
+                <a href="{% url 'email_messages:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

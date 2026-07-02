@@ -12,8 +12,21 @@ class Client(models.Model):
     email = models.EmailField(unique=True, verbose_name="Email")
     full_name = models.CharField(max_length=255, verbose_name="Ф. И. О.")
     comment = models.TextField(blank=True, verbose_name="Комментарий")
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name="Владелец"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Клиент"
+        verbose_name_plural = "Клиенты"
+        ordering = ["-created_at"]
 
     def __str__(self):
         """Возвращает строковое представление клиента."""
-        return self.full_name or self.email
+        return f"{self.full_name} <{self.email}>" if self.full_name else self.email

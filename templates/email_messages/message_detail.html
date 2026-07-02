@@ -1,13 +1,39 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>{{ message.subject }}</h1>
-<p>{{ message.body|linebreaks }}</p>
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">{{ message.subject }}</h4>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <p>{{ message.body|linebreaks }}</p>
+            </div>
 
-{% if not user.groups.all.0.name == 'Менеджер' %}
-<a href="{% url 'email_messages:update' message.pk %}" class="btn btn-outline-success">Редактировать</a>
-<a href="{% url 'email_messages:delete' message.pk %}" class="btn btn-outline-danger">Удалить</a>
-{% endif %}
+            <div class="text-muted mb-3">
+                <small>Создано: {{ message.created_at|date:"d.m.Y H:i" }}</small>
+                {% if message.updated_at != message.created_at %}
+                    <small class="ms-2">Обновлено: {{ message.updated_at|date:"d.m.Y H:i" }}</small>
+                {% endif %}
+                <br>
+                <small>Владелец: {{ message.owner }}</small>
+            </div>
 
-<a href="{% url 'email_messages:list' %}" class="btn btn-secondary">Назад к списку</a>
+            <div>
+                {% if user.is_superuser or user.groups.all.0.name == 'Менеджер' or message.owner == user %}
+                    <a href="{% url 'email_messages:update' message.pk %}" class="btn btn-outline-success">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                    <a href="{% url 'email_messages:delete' message.pk %}" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Удалить
+                    </a>
+                {% endif %}
+                <a href="{% url 'email_messages:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Назад к списку
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

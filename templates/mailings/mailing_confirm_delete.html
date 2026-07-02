@@ -1,10 +1,55 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Удалить рассылку #{{ object.id }}?</h1>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger">Да, удалить</button>
-    <a href="{% url 'mailings:list' %}" class="btn btn-secondary">Отмена</a>
-</form>
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">Подтверждение удаления</h4>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Вы действительно хотите удалить рассылку?</h5>
+
+            <div class="alert alert-warning">
+                <strong>Внимание!</strong> Это действие необратимо.
+            </div>
+
+            <div class="mb-3">
+                <p><strong>ID:</strong> #{{ object.id }}</p>
+                <p><strong>Статус:</strong>
+                    <span class="badge
+                        {% if object.status == 'created' %}bg-secondary
+                        {% elif object.status == 'started' %}bg-primary
+                        {% elif object.status == 'partial' %}bg-warning
+                        {% elif object.status == 'completed' %}bg-success
+                        {% elif object.status == 'failed' %}bg-danger
+                        {% endif %}">
+                        {{ object.get_status_display }}
+                    </span>
+                </p>
+                <p><strong>Тема:</strong> {{ object.message.subject }}</p>
+                <p><strong>Начало:</strong> {{ object.first_sent_at|date:"d.m.Y H:i" }}</p>
+                <p><strong>Окончание:</strong> {{ object.end_at|date:"d.m.Y H:i" }}</p>
+                <p><strong>Получателей:</strong> {{ object.recipients.count }}</p>
+            </div>
+
+            {% if object.attempts.exists %}
+                <div class="alert alert-danger">
+                    <strong>Предупреждение!</strong>
+                    У этой рассылки есть {{ object.attempts.count }} записей о попытках отправки.
+                    При удалении рассылки они будут удалены.
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Да, удалить
+                </button>
+                <a href="{% url 'mailings:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

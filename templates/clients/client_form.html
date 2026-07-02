@@ -1,11 +1,30 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>{% if object %}Редактировать{% else %}Добавить{% endif %} клиента</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Сохранить</button>
-    <a href="{% url 'clients:list' %}" class="btn btn-secondary">Назад к списку</a>
-</form>
+<div class="container">
+    <h1>
+        {% if object %}
+            Редактирование клиента: {{ object.full_name|default:object.email }}
+        {% else %}
+            Добавление нового клиента
+        {% endif %}
+    </h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {{ form.as_p }}
+
+        <button type="submit" class="btn btn-success">Сохранить</button>
+        <a href="{% url 'clients:list' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
 {% endblock %}

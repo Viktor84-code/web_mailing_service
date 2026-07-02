@@ -1,11 +1,38 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>{% if object %}Редактировать{% else %}Добавить{% endif %} сообщение</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Сохранить</button>
-    <a href="{% url 'email_messages:list' %}" class="btn btn-secondary">Назад к списку</a>
-</form>
+<div class="container">
+    <h1>
+        {% if object %}
+            Редактирование сообщения: {{ object.subject }}
+        {% else %}
+            Добавление нового сообщения
+        {% endif %}
+    </h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {{ form.as_p }}
+
+        <div class="mb-3 text-muted">
+            <small>Владелец: {{ request.user }}</small>
+        </div>
+
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-save"></i> Сохранить
+        </button>
+        <a href="{% url 'email_messages:list' %}" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Отмена
+        </a>
+    </form>
+</div>
 {% endblock %}

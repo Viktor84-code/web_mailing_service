@@ -1,9 +1,24 @@
 """Контроллеры (CBV) для управления сообщениями."""
 
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
-from django.contrib.auth.mixins import LoginRequiredMixin
+
+from .forms import MessageForm
 from .models import Message
+
+
+class OwnerOrManagerMixin(UserPassesTestMixin):
+    """Миксин для проверки прав: владелец или менеджер."""
+
+    def test_func(self):
+        obj = self.get_object()
+        user = self.request.user
+        if user.is_superuser:
+            return True
+        if user.groups.filter(name='Менеджер').exists():
+            return True
+        return obj.owner == user
 
 
 class MessageListView(LoginRequiredMixin, ListView):
@@ -14,16 +29,25 @@ class MessageListView(LoginRequiredMixin, ListView):
     context_object_name = "messages"
 
     def get_queryset(self):
-        if self.request.user.groups.filter(name='Менеджер').exists():
+        user = self.request.user
+        if user.is_superuser or user.groups.filter(name='Менеджер').exists():
             return Message.objects.all()
-        return Message.objects.filter(owner=self.request.user)
+        return Message.objects.filter(owner=user)
+
+
+class MessageDetailView(LoginRequiredMixin, OwnerOrManagerMixin, DetailView):
+    """Отображает детальную страницу сообщения."""
+
+    model = Message
+    template_name = "email_messages/message_detail.html"
+    context_object_name = "message"
 
 
 class MessageCreateView(LoginRequiredMixin, CreateView):
     """Создаёт новое сообщение."""
 
     model = Message
-    fields = ["subject", "body"]
+    form_class = MessageForm
     template_name = "email_messages/message_form.html"
     success_url = reverse_lazy("email_messages:list")
 
@@ -32,16 +56,16 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class MessageUpdateView(UpdateView):
+class MessageUpdateView(LoginRequiredMixin, OwnerOrManagerMixin, UpdateView):
     """Редактирует существующее сообщение."""
 
     model = Message
-    fields = ["subject", "body"]
+    form_class = MessageForm
     template_name = "email_messages/message_form.html"
     success_url = reverse_lazy("email_messages:list")
 
 
-class MessageDeleteView(DeleteView):
+class MessageDeleteView(LoginRequiredMixin, OwnerOrManagerMixin, DeleteView):
     """Удаляет сообщение."""
 
     model = Message

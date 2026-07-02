@@ -1,24 +1,99 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Рассылки</h1>
-<a href="{% url 'mailings:create' %}" class="btn btn-success mb-3">Добавить рассылку</a>
-<ul class="list-group">
-    {% for mailing in mailings %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        Рассылка #{{ mailing.id }} - {{ mailing.get_status_display }}
-        <div>
-            <form method="post" action="{% url 'mailings:send' mailing.pk %}" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-warning">Отправить</button>
-            </form>
-            <a href="{% url 'mailings:detail' mailing.pk %}" class="btn btn-sm btn-outline-info">Просмотр</a>
-            <a href="{% url 'mailings:update' mailing.pk %}" class="btn btn-sm btn-outline-success">Ред</a>
-            <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-sm btn-outline-danger">Уд</a>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Рассылки</h1>
+        <a href="{% url 'mailings:create' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Добавить рассылку
+        </a>
+    </div>
+
+    {% if mailings %}
+        <div class="list-group">
+            {% for mailing in mailings %}
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Рассылка #{{ mailing.id }}</strong>
+                        <span class="badge
+                            {% if mailing.status == 'created' %}bg-secondary
+                            {% elif mailing.status == 'started' %}bg-primary
+                            {% elif mailing.status == 'partial' %}bg-warning
+                            {% elif mailing.status == 'completed' %}bg-success
+                            {% elif mailing.status == 'failed' %}bg-danger
+                            {% endif %}">
+                            {{ mailing.get_status_display }}
+                        </span>
+                        {% if mailing.is_active %}
+                            <span class="badge bg-success">Активна</span>
+                        {% else %}
+                            <span class="badge bg-danger">Отключена</span>
+                        {% endif %}
+                        {% if mailing.is_sent %}
+                            <span class="badge bg-info">Отправлена</span>
+                        {% endif %}
+                        <br>
+                        <small class="text-muted">
+                            {{ mailing.first_sent_at|date:"d.m.Y H:i" }} - {{ mailing.end_at|date:"d.m.Y H:i" }}
+                        </small>
+                        {% if user.is_superuser or user.groups.all.0.name == 'Менеджер' %}
+                            <br>
+                            <small class="text-muted">Владелец: {{ mailing.owner }}</small>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if user.is_superuser or user.groups.all.0.name == 'Менеджер' or mailing.owner == user %}
+                            {% if mailing.status != 'completed' and mailing.status != 'failed' and not mailing.is_sent %}
+                                <form method="post" action="{% url 'mailings:send' mailing.pk %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-warning" title="Отправить">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                            <a href="{% url 'mailings:detail' mailing.pk %}" class="btn btn-sm btn-outline-info" title="Просмотр">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'mailings:update' mailing.pk %}" class="btn btn-sm btn-outline-success" title="Редактировать">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-sm btn-outline-danger" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        {% else %}
+                            <a href="{% url 'mailings:detail' mailing.pk %}" class="btn btn-sm btn-outline-info" title="Просмотр">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
-    </li>
-    {% empty %}
-    <li class="list-group-item">Нет рассылок. <a href="{% url 'mailings:create' %}">Создайте первую</a>.</li>
-    {% endfor %}
-</ul>
+
+        {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1">&laquo; Первая</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a></li>
+                    {% endif %}
+
+                    <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info mt-3">
+            <p class="mb-0">У вас пока нет рассылок.</p>
+            <a href="{% url 'mailings:create' %}" class="btn btn-success mt-2">Создать первую рассылку</a>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

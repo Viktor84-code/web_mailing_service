@@ -1,20 +1,37 @@
-from django.contrib.auth import login
+import logging
 
-from mailings.models import Mailing, MailingAttempt
+from django.contrib.auth import login
+from django.db.models import Count, Q
+
+from mailings.models import Mailing
+
+logger = logging.getLogger(__name__)
 
 
 class UserService:
-    """Сервис для работы с пользователями"""
+    """Сервис для работы с пользователями."""
 
     @staticmethod
-    def register_user(request, form):
+    def create_user(form):
         """
-        Регистрация нового пользователя.
-        Автоматически логинит после регистрации.
+        Создает нового пользователя.
+        Возвращает созданного пользователя.
         """
-        user = form.save()
+        try:
+            user = form.save()
+            logger.info(f"Создан новый пользователь: {user.username} (ID: {user.id})")
+            return user
+        except Exception as e:
+            logger.error(f"Ошибка при создании пользователя: {e}")
+            raise
+
+    @staticmethod
+    def login_user(request, user):
+        """
+        Авторизует пользователя.
+        """
         login(request, user)
-        return user
+        logger.info(f"Пользователь {user.username} авторизован")
 
     @staticmethod
     def get_profile_stats(user):
@@ -22,32 +39,36 @@ class UserService:
         Получение статистики для профиля пользователя.
         Возвращает словарь с данными.
         """
-        user_mailings = Mailing.objects.filter(owner=user)
+        # Для менеджеров и суперпользователей показываем всю статистику
+        if user.is_superuser or user.groups.filter(name='Менеджер').exists():
+            mailings = Mailing.objects.all()
+        else:
+            mailings = Mailing.objects.filter(owner=user)
 
-        # Количество рассылок
-        total_mailings = user_mailings.count()
+        # Агрегируем данные одним запросом
+        stats = mailings.aggregate(
+            total_mailings=Count('id'),
+            sent_messages=Count('id', filter=Q(is_sent=True)),
+            total_attempts=Count('attempts'),
+            success_attempts=Count('attempts', filter=Q(attempts__status='success')),
+        )
 
-        # Количество попыток
-        total_attempts = MailingAttempt.objects.filter(
-            mailing__in=user_mailings
-        ).count()
-
-        # Успешные попытки
-        success_attempts = MailingAttempt.objects.filter(
-            mailing__in=user_mailings,
-            status='success'
-        ).count()
-
-        # Отправленные сообщения
-        sent_messages = Mailing.objects.filter(
-            owner=user,
-            is_sent=True
-        ).count()
+        total_attempts = stats['total_attempts'] or 0
+        success_attempts = stats['success_attempts'] or 0
 
         return {
-            'total_mailings': total_mailings,
+            'total_mailings': stats['total_mailings'] or 0,
+            'sent_messages': stats['sent_messages'] or 0,
             'total_attempts': total_attempts,
             'success_attempts': success_attempts,
             'failed_attempts': total_attempts - success_attempts,
-            'sent_messages': sent_messages,
         }
+
+    @staticmethod
+    def get_user_mailings(user):
+        """
+        Возвращает рассылки пользователя с учетом прав.
+        """
+        if user.is_superuser or user.groups.filter(name='Менеджер').exists():
+            return Mailing.objects.all().select_related('message', 'owner')
+        return Mailing.objects.filter(owner=user).select_related('message', 'owner')

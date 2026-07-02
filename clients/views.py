@@ -1,12 +1,37 @@
 """Контроллеры (CBV) для управления клиентами."""
 
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from .forms import ClientForm
 from .models import Client
+
+
+class OwnerOrManagerMixin(UserPassesTestMixin):
+    """Миксин для проверки прав: владелец или менеджер."""
+
+    def test_func(self):
+        obj = self.get_object()
+        user = self.request.user
+        if user.is_superuser:
+            return True
+        if user.groups.filter(name='Менеджер').exists():
+            return True
+        return obj.owner == user
+
+
+class OwnerOnlyMixin(UserPassesTestMixin):
+    """Миксин для проверки прав: только владелец (менеджеры не могут)."""
+
+    def test_func(self):
+        obj = self.get_object()
+        user = self.request.user
+        if user.is_superuser:
+            return True
+        if user.groups.filter(name='Менеджер').exists():
+            return False  # Менеджеры НЕ могут
+        return obj.owner == user
 
 
 class ClientListView(LoginRequiredMixin, ListView):
@@ -17,9 +42,10 @@ class ClientListView(LoginRequiredMixin, ListView):
     context_object_name = "clients"
 
     def get_queryset(self):
-        if self.request.user.groups.filter(name='Менеджер').exists():
-            return Client.objects.all()  # Менеджер видит всех
-        return Client.objects.filter(owner=self.request.user)
+        user = self.request.user
+        if user.is_superuser or user.groups.filter(name='Менеджер').exists():
+            return Client.objects.all()
+        return Client.objects.filter(owner=user)
 
 
 class ClientCreateView(LoginRequiredMixin, CreateView):
@@ -35,7 +61,7 @@ class ClientCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ClientUpdateView(LoginRequiredMixin, UpdateView):
+class ClientUpdateView(LoginRequiredMixin, OwnerOnlyMixin, UpdateView):
     """Редактирует существующего клиента."""
 
     model = Client
@@ -43,16 +69,8 @@ class ClientUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'clients/client_form.html'
     success_url = reverse_lazy('clients:list')
 
-    def dispatch(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if request.user.groups.filter(name='Менеджер').exists():
-            raise PermissionDenied("Менеджеры не могут редактировать клиентов")
-        if obj.owner != request.user:
-            raise PermissionDenied("Вы не можете редактировать этот объект")
-        return super().dispatch(request, *args, **kwargs)
 
-
-class ClientDeleteView(LoginRequiredMixin, DeleteView):
+class ClientDeleteView(LoginRequiredMixin, OwnerOnlyMixin, DeleteView):
     """Удаляет клиента."""
 
     model = Client
