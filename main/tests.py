@@ -14,25 +14,25 @@ class TestMain:
 
     def test_home_page_anonymous(self, client):
         """Главная для неавторизованного пользователя"""
-        response = client.get('/')
+        response = client.get("/")
         # Редирект на логин
         assert response.status_code == 302
-        assert '/users/login/' in response.url
+        assert "/users/login/" in response.url
 
     def test_home_page_authenticated(self, client):
         """Главная для авторизованного пользователя"""
-        user = User.objects.create_user(username='testuser', password='testpass')
-        client.login(username='testuser', password='testpass')
+        User.objects.create_user(username="testuser", password="testpass")
+        client.login(username="testuser", password="testpass")
 
-        response = client.get('/')
+        response = client.get("/")
         assert response.status_code == 200
         # Проверяем наличие текста без b''
-        assert 'Сервис рассылок' in response.content.decode('utf-8')
+        assert "Сервис рассылок" in response.content.decode("utf-8")
 
     def test_home_page_stats(self, client):
         """Проверка статистики на главной"""
-        user = User.objects.create_user(username='testuser', password='testpass')
-        client.login(username='testuser', password='testpass')
+        user = User.objects.create_user(username="testuser", password="testpass")
+        client.login(username="testuser", password="testpass")
 
         # Создаём клиентов
         Client.objects.create(email="a@a.com", full_name="A", owner=user)
@@ -52,7 +52,7 @@ class TestMain:
             status="started",
             is_active=True,
             is_sent=False,
-            owner=user
+            owner=user,
         )
         Mailing.objects.create(
             first_sent_at=start,
@@ -61,7 +61,7 @@ class TestMain:
             status="started",
             is_active=True,
             is_sent=False,
-            owner=user
+            owner=user,
         )
 
         url = reverse("main:home")

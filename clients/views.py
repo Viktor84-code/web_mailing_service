@@ -16,7 +16,7 @@ class OwnerOrManagerMixin(UserPassesTestMixin):
         user = self.request.user
         if user.is_superuser:
             return True
-        if user.groups.filter(name='Менеджер').exists():
+        if user.groups.filter(name="Менеджер").exists():
             return True
         return obj.owner == user
 
@@ -29,7 +29,7 @@ class OwnerOnlyMixin(UserPassesTestMixin):
         user = self.request.user
         if user.is_superuser:
             return True
-        if user.groups.filter(name='Менеджер').exists():
+        if user.groups.filter(name="Менеджер").exists():
             return False  # Менеджеры НЕ могут
         return obj.owner == user
 
@@ -43,7 +43,7 @@ class ClientListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser or user.groups.filter(name='Менеджер').exists():
+        if user.is_superuser or user.groups.filter(name="Менеджер").exists():
             return Client.objects.all()
         return Client.objects.filter(owner=user)
 
@@ -66,8 +66,8 @@ class ClientUpdateView(LoginRequiredMixin, OwnerOnlyMixin, UpdateView):
 
     model = Client
     form_class = ClientForm
-    template_name = 'clients/client_form.html'
-    success_url = reverse_lazy('clients:list')
+    template_name = "clients/client_form.html"
+    success_url = reverse_lazy("clients:list")
 
 
 class ClientDeleteView(LoginRequiredMixin, OwnerOnlyMixin, DeleteView):

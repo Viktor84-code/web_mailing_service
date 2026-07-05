@@ -10,13 +10,13 @@ from mailings.models import Mailing
 
 
 @cache_page(60 * 5)
-@vary_on_headers('Cookie')
+@vary_on_headers("Cookie")
 @login_required
 def home(request):
     """Отображает главную страницу со статистикой."""
     user = request.user
 
-    if user.is_superuser or user.groups.filter(name='Менеджер').exists():
+    if user.is_superuser or user.groups.filter(name="Менеджер").exists():
         mailings = Mailing.objects.all()
         clients = Client.objects.all()
     else:
@@ -24,12 +24,8 @@ def home(request):
         clients = Client.objects.filter(owner=user)
 
     total_mailings = mailings.count()
-    active_mailings = mailings.filter(
-        status__in=['created', 'started']
-    ).count()
-    completed_mailings = mailings.filter(
-        status__in=['completed', 'failed']
-    ).count()
+    active_mailings = mailings.filter(status__in=["created", "started"]).count()
+    completed_mailings = mailings.filter(status__in=["completed", "failed"]).count()
     unique_clients = clients.count()
 
     context = {

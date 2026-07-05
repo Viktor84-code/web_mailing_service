@@ -47,15 +47,9 @@ class MailingService:
         success_count = self._count_success(results)
         failed_count = len(results) - success_count
 
-        logger.info(
-            f"Рассылка #{mailing.id} отправлена. "
-            f"Успешно: {success_count}, Ошибок: {failed_count}"
-        )
+        logger.info(f"Рассылка #{mailing.id} отправлена. " f"Успешно: {success_count}, Ошибок: {failed_count}")
 
-        return {
-            'success_count': success_count,
-            'failed_count': failed_count
-        }
+        return {"success_count": success_count, "failed_count": failed_count}
 
     def _validate_mailing(self, mailing):
         """Проверяет, можно ли отправить рассылку."""
@@ -83,24 +77,20 @@ class MailingService:
             response = str(e)
             logger.error(f"Ошибка отправки на {client.email}: {response}")
 
-        MailingAttempt.objects.create(
-            mailing=mailing,
-            status=status,
-            server_response=response
-        )
+        MailingAttempt.objects.create(mailing=mailing, status=status, server_response=response)
         return status
 
     def _update_mailing_status(self, mailing, results):
         """Обновляет статус рассылки на основе результатов."""
-        success_count = results.count('success')
-        failed_count = results.count('failed')
+        success_count = results.count("success")
+        failed_count = results.count("failed")
 
         if success_count == 0:
-            new_status = 'failed'
+            new_status = "failed"
         elif failed_count == 0:
-            new_status = 'completed'
+            new_status = "completed"
         else:
-            new_status = 'partial'
+            new_status = "partial"
 
         mailing.status = new_status
         # Если хотя бы одно письмо ушло - считаем рассылку отправленной
@@ -110,7 +100,7 @@ class MailingService:
 
     def _count_success(self, results):
         """Считает количество успешных отправок."""
-        return results.count('success')
+        return results.count("success")
 
     def update_status(self, mailing):
         """
@@ -145,8 +135,4 @@ class MailingService:
         Проверяет, можно ли отправить рассылку.
         """
         now = timezone.now()
-        return (
-                mailing.is_active and
-                not mailing.is_sent and
-                mailing.first_sent_at <= now <= mailing.end_at
-        )
+        return mailing.is_active and not mailing.is_sent and mailing.first_sent_at <= now <= mailing.end_at

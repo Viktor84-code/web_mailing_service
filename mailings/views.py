@@ -22,7 +22,7 @@ class OwnerOrManagerMixin(UserPassesTestMixin):
         user = self.request.user
         if user.is_superuser:
             return True
-        if user.groups.filter(name='Менеджер').exists():
+        if user.groups.filter(name="Менеджер").exists():
             return True
         return obj.owner == user
 
@@ -35,7 +35,7 @@ class OwnerOnlyMixin(UserPassesTestMixin):
         user = self.request.user
         if user.is_superuser:
             return True
-        if user.groups.filter(name='Менеджер').exists():
+        if user.groups.filter(name="Менеджер").exists():
             return False
         return obj.owner == user
 
@@ -49,7 +49,7 @@ class MailingListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser or user.groups.filter(name='Менеджер').exists():
+        if user.is_superuser or user.groups.filter(name="Менеджер").exists():
             queryset = Mailing.objects.all()
         else:
             queryset = Mailing.objects.filter(owner=user)
@@ -126,7 +126,7 @@ class MailingSendView(LoginRequiredMixin, OwnerOrManagerMixin, View):
                 request,
                 f"Рассылка #{pk} отправлена. "
                 f"Успешно: {result['success_count']}, "
-                f"Ошибок: {result['failed_count']}"
+                f"Ошибок: {result['failed_count']}",
             )
         except ValueError as e:
             messages.error(request, str(e))
@@ -137,10 +137,10 @@ class MailingSendView(LoginRequiredMixin, OwnerOrManagerMixin, View):
 
     def test_func(self):
         """Проверка прав для отправки."""
-        mailing = get_object_or_404(Mailing, pk=self.kwargs['pk'])
+        mailing = get_object_or_404(Mailing, pk=self.kwargs["pk"])
         user = self.request.user
         if user.is_superuser:
             return True
-        if user.groups.filter(name='Менеджер').exists():
+        if user.groups.filter(name="Менеджер").exists():
             return True
         return mailing.owner == user

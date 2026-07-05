@@ -2,7 +2,6 @@
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.utils import timezone
 
 from .models import Mailing
 
@@ -14,12 +13,8 @@ class MailingForm(forms.ModelForm):
         model = Mailing
         fields = ["message", "recipients", "first_sent_at", "end_at"]
         widgets = {
-            "first_sent_at": forms.DateTimeInput(
-                attrs={"type": "datetime-local", "class": "form-control"}
-            ),
-            "end_at": forms.DateTimeInput(
-                attrs={"type": "datetime-local", "class": "form-control"}
-            ),
+            "first_sent_at": forms.DateTimeInput(attrs={"type": "datetime-local", "class": "form-control"}),
+            "end_at": forms.DateTimeInput(attrs={"type": "datetime-local", "class": "form-control"}),
             "message": forms.Select(attrs={"class": "form-control"}),
             "recipients": forms.SelectMultiple(attrs={"class": "form-control"}),
         }
@@ -56,8 +51,6 @@ class MailingForm(forms.ModelForm):
 
         # Проверка что начало раньше окончания
         if first_sent_at >= end_at:
-            raise ValidationError(
-                "Дата начала должна быть раньше даты окончания."
-            )
+            raise ValidationError("Дата начала должна быть раньше даты окончания.")
 
         return cleaned_data

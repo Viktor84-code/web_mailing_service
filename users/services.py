@@ -40,28 +40,28 @@ class UserService:
         Возвращает словарь с данными.
         """
         # Для менеджеров и суперпользователей показываем всю статистику
-        if user.is_superuser or user.groups.filter(name='Менеджер').exists():
+        if user.is_superuser or user.groups.filter(name="Менеджер").exists():
             mailings = Mailing.objects.all()
         else:
             mailings = Mailing.objects.filter(owner=user)
 
         # Агрегируем данные одним запросом
         stats = mailings.aggregate(
-            total_mailings=Count('id'),
-            sent_messages=Count('id', filter=Q(is_sent=True)),
-            total_attempts=Count('attempts'),
-            success_attempts=Count('attempts', filter=Q(attempts__status='success')),
+            total_mailings=Count("id"),
+            sent_messages=Count("id", filter=Q(is_sent=True)),
+            total_attempts=Count("attempts"),
+            success_attempts=Count("attempts", filter=Q(attempts__status="success")),
         )
 
-        total_attempts = stats['total_attempts'] or 0
-        success_attempts = stats['success_attempts'] or 0
+        total_attempts = stats["total_attempts"] or 0
+        success_attempts = stats["success_attempts"] or 0
 
         return {
-            'total_mailings': stats['total_mailings'] or 0,
-            'sent_messages': stats['sent_messages'] or 0,
-            'total_attempts': total_attempts,
-            'success_attempts': success_attempts,
-            'failed_attempts': total_attempts - success_attempts,
+            "total_mailings": stats["total_mailings"] or 0,
+            "sent_messages": stats["sent_messages"] or 0,
+            "total_attempts": total_attempts,
+            "success_attempts": success_attempts,
+            "failed_attempts": total_attempts - success_attempts,
         }
 
     @staticmethod
@@ -69,6 +69,6 @@ class UserService:
         """
         Возвращает рассылки пользователя с учетом прав.
         """
-        if user.is_superuser or user.groups.filter(name='Менеджер').exists():
-            return Mailing.objects.all().select_related('message', 'owner')
-        return Mailing.objects.filter(owner=user).select_related('message', 'owner')
+        if user.is_superuser or user.groups.filter(name="Менеджер").exists():
+            return Mailing.objects.all().select_related("message", "owner")
+        return Mailing.objects.filter(owner=user).select_related("message", "owner")

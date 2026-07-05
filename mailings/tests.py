@@ -16,19 +16,15 @@ class TestMailingModel(TestCase):
     """Тесты для модели Mailing"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.message = Message.objects.create(
-            subject='Test Subject',
-            body='Test Body',
-            owner=self.user
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
 
     def test_mailing_str_method(self):
         mailing = Mailing.objects.create(
             first_sent_at=timezone.now(),
             end_at=timezone.now() + timezone.timedelta(hours=1),
             message=self.message,
-            owner=self.user
+            owner=self.user,
         )
         self.assertEqual(str(mailing), f"Рассылка #{mailing.id} - Создана")
 
@@ -37,42 +33,34 @@ class TestMailingModel(TestCase):
             first_sent_at=timezone.now() + timezone.timedelta(days=1),
             end_at=timezone.now() + timezone.timedelta(days=2),
             message=self.message,
-            owner=self.user
+            owner=self.user,
         )
-        self.assertEqual(mailing.status, 'created')
+        self.assertEqual(mailing.status, "created")
 
     def test_mailing_save_sets_started_status(self):
         mailing = Mailing.objects.create(
             first_sent_at=timezone.now() - timezone.timedelta(hours=1),
             end_at=timezone.now() + timezone.timedelta(hours=1),
             message=self.message,
-            owner=self.user
+            owner=self.user,
         )
-        self.assertEqual(mailing.status, 'created')
+        self.assertEqual(mailing.status, "created")
 
 
 class TestMailingServices(TestCase):
     """Тесты для MailingService"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client_obj = ClientModel.objects.create(
-            email='test@test.com',
-            full_name='Test Client',
-            owner=self.user
-        )
-        self.message = Message.objects.create(
-            subject='Test Subject',
-            body='Test Body',
-            owner=self.user
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
+        self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
         self.mailing = Mailing.objects.create(
             first_sent_at=timezone.now() - timezone.timedelta(hours=1),
             end_at=timezone.now() + timezone.timedelta(hours=1),
             message=self.message,
             is_active=True,
             is_sent=False,
-            owner=self.user
+            owner=self.user,
         )
         self.mailing.recipients.add(self.client_obj)
         self.service = MailingService()
@@ -96,7 +84,7 @@ class TestMailingServices(TestCase):
         self.assertFalse(self.service.can_send(self.mailing))
 
     def test_count_success(self):
-        results = ['success', 'failed', 'success', 'success']
+        results = ["success", "failed", "success", "success"]
         count = self.service._count_success(results)
         self.assertEqual(count, 3)
 
@@ -121,13 +109,13 @@ class TestMailingServices(TestCase):
             message=self.message,
             is_active=True,
             is_sent=False,
-            status='created',
-            owner=self.user
+            status="created",
+            owner=self.user,
         )
         result = self.service.update_status(mailing)
         self.assertTrue(result)
         mailing.refresh_from_db()
-        self.assertEqual(mailing.status, 'started')
+        self.assertEqual(mailing.status, "started")
 
     def test_update_status_no_change(self):
         self.mailing.is_sent = True
@@ -141,98 +129,90 @@ class TestMailingsViews(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.other_user = User.objects.create_user(username='otheruser', password='otherpass')
-        self.message = Message.objects.create(
-            subject='Test',
-            body='Test',
-            owner=self.user
-        )
-        self.client_obj = ClientModel.objects.create(
-            email='test@test.com',
-            full_name='Test Client',
-            owner=self.user
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.other_user = User.objects.create_user(username="otheruser", password="otherpass")
+        self.message = Message.objects.create(subject="Test", body="Test", owner=self.user)
+        self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
         self.mailing = Mailing.objects.create(
             first_sent_at=timezone.now() - timezone.timedelta(hours=1),
             end_at=timezone.now() + timezone.timedelta(hours=1),
             message=self.message,
             is_active=True,
             is_sent=False,
-            owner=self.user
+            owner=self.user,
         )
         self.mailing.recipients.add(self.client_obj)
 
     def test_mailing_list_view(self):
         self.client.force_login(self.user)
-        response = self.client.get('/mailings/')
+        response = self.client.get("/mailings/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, f"Рассылка #{self.mailing.id}")
 
     def test_mailing_detail_view(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/mailings/{self.mailing.id}/')
+        response = self.client.get(f"/mailings/{self.mailing.id}/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.message.subject)
 
     def test_mailing_detail_view_other_user_403(self):
         self.client.force_login(self.other_user)
-        response = self.client.get(f'/mailings/{self.mailing.id}/')
+        response = self.client.get(f"/mailings/{self.mailing.id}/")
         self.assertEqual(response.status_code, 200)
 
     def test_mailing_create_view_get(self):
         self.client.force_login(self.user)
-        response = self.client.get('/mailings/create/')
+        response = self.client.get("/mailings/create/")
         self.assertEqual(response.status_code, 200)
 
     def test_mailing_create_view_post_valid(self):
         self.client.force_login(self.user)
         data = {
-            'first_sent_at': timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'end_at': (timezone.now() + timezone.timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S'),
-            'message': self.message.id,
-            'recipients': [self.client_obj.id],
-            'is_active': True,
+            "first_sent_at": timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "end_at": (timezone.now() + timezone.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S"),
+            "message": self.message.id,
+            "recipients": [self.client_obj.id],
+            "is_active": True,
         }
-        response = self.client.post('/mailings/create/', data)
+        response = self.client.post("/mailings/create/", data)
         self.assertEqual(response.status_code, 200)
 
     def test_mailing_update_view_get(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/mailings/{self.mailing.id}/update/')
+        response = self.client.get(f"/mailings/{self.mailing.id}/update/")
         self.assertEqual(response.status_code, 200)
 
     def test_mailing_update_view_post_valid(self):
         self.client.force_login(self.user)
         data = {
-            'first_sent_at': timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'end_at': (timezone.now() + timezone.timedelta(days=2)).strftime('%Y-%m-%d %H:%M:%S'),
-            'message': self.message.id,
-            'recipients': [self.client_obj.id],
-            'is_active': False,
+            "first_sent_at": timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "end_at": (timezone.now() + timezone.timedelta(days=2)).strftime("%Y-%m-%d %H:%M:%S"),
+            "message": self.message.id,
+            "recipients": [self.client_obj.id],
+            "is_active": False,
         }
-        response = self.client.post(f'/mailings/{self.mailing.id}/update/', data)
-        self.assertRedirects(response, '/mailings/')
+        response = self.client.post(f"/mailings/{self.mailing.id}/update/", data)
+        self.assertRedirects(response, "/mailings/")
 
     def test_mailing_update_view_other_user_403(self):
         self.client.force_login(self.other_user)
-        response = self.client.get(f'/mailings/{self.mailing.id}/update/')
+        response = self.client.get(f"/mailings/{self.mailing.id}/update/")
         self.assertEqual(response.status_code, 403)
 
     def test_mailing_delete_view_get(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/mailings/{self.mailing.id}/delete/')
+        response = self.client.get(f"/mailings/{self.mailing.id}/delete/")
         self.assertEqual(response.status_code, 200)
 
     def test_mailing_delete_view_post(self):
         self.client.force_login(self.user)
-        response = self.client.post(f'/mailings/{self.mailing.id}/delete/')
-        self.assertRedirects(response, '/mailings/')
+        response = self.client.post(f"/mailings/{self.mailing.id}/delete/")
+        self.assertRedirects(response, "/mailings/")
         self.assertEqual(Mailing.objects.count(), 0)
 
     def test_mailing_delete_view_other_user_403(self):
         self.client.force_login(self.other_user)
-        response = self.client.get(f'/mailings/{self.mailing.id}/delete/')
+        response = self.client.get(f"/mailings/{self.mailing.id}/delete/")
         self.assertEqual(response.status_code, 403)
 
 
@@ -240,24 +220,16 @@ class TestMailingsCommands(TestCase):
     """Тесты для команд управления рассылками"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client_obj = ClientModel.objects.create(
-            email='test@test.com',
-            full_name='Test Client',
-            owner=self.user
-        )
-        self.message = Message.objects.create(
-            subject='Test Subject',
-            body='Test Body',
-            owner=self.user
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
+        self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
         self.mailing = Mailing.objects.create(
             first_sent_at=timezone.now() - timezone.timedelta(hours=1),
             end_at=timezone.now() + timezone.timedelta(hours=1),
             message=self.message,
             is_active=True,
             is_sent=False,
-            owner=self.user
+            owner=self.user,
         )
         self.mailing.recipients.add(self.client_obj)
 
@@ -282,68 +254,58 @@ class TestMailingServicesExtended(TestCase):
     """Дополнительные тесты для MailingService (строки 38-55, 72-91, 95-109)"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client_obj = ClientModel.objects.create(
-            email='test@test.com',
-            full_name='Test Client',
-            owner=self.user
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
         self.client_obj2 = ClientModel.objects.create(
-            email='test2@test.com',
-            full_name='Test Client 2',
-            owner=self.user
+            email="test2@test.com", full_name="Test Client 2", owner=self.user
         )
-        self.message = Message.objects.create(
-            subject='Test Subject',
-            body='Test Body',
-            owner=self.user
-        )
+        self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
         self.mailing = Mailing.objects.create(
             first_sent_at=timezone.now() - timezone.timedelta(hours=1),
             end_at=timezone.now() + timezone.timedelta(hours=1),
             message=self.message,
             is_active=True,
             is_sent=False,
-            owner=self.user
+            owner=self.user,
         )
         self.mailing.recipients.add(self.client_obj)
         self.mailing.recipients.add(self.client_obj2)
         self.service = MailingService()
 
-    @patch('mailings.services.EmailSender.send')
+    @patch("mailings.services.EmailSender.send")
     def test_send_mailing_success(self, mock_send):
         """Успешная отправка всем получателям (строки 38-55)"""
         mock_send.return_value = 1
         result = self.service.send_mailing(self.mailing)
 
-        self.assertEqual(result['success_count'], 2)
-        self.assertEqual(result['failed_count'], 0)
+        self.assertEqual(result["success_count"], 2)
+        self.assertEqual(result["failed_count"], 0)
         self.mailing.refresh_from_db()
-        self.assertEqual(self.mailing.status, 'completed')
+        self.assertEqual(self.mailing.status, "completed")
         self.assertTrue(self.mailing.is_sent)
 
-    @patch('mailings.services.EmailSender.send')
+    @patch("mailings.services.EmailSender.send")
     def test_send_mailing_partial(self, mock_send):
         """Частичная отправка (один успех, одна ошибка) (строки 72-91)"""
-        mock_send.side_effect = [1, Exception('SMTP error')]
+        mock_send.side_effect = [1, Exception("SMTP error")]
         result = self.service.send_mailing(self.mailing)
 
-        self.assertEqual(result['success_count'], 1)
-        self.assertEqual(result['failed_count'], 1)
+        self.assertEqual(result["success_count"], 1)
+        self.assertEqual(result["failed_count"], 1)
         self.mailing.refresh_from_db()
-        self.assertEqual(self.mailing.status, 'partial')
+        self.assertEqual(self.mailing.status, "partial")
         self.assertTrue(self.mailing.is_sent)
 
-    @patch('mailings.services.EmailSender.send')
+    @patch("mailings.services.EmailSender.send")
     def test_send_mailing_all_failed(self, mock_send):
         """Полная ошибка отправки (строки 72-91)"""
-        mock_send.side_effect = Exception('SMTP error')
+        mock_send.side_effect = Exception("SMTP error")
         result = self.service.send_mailing(self.mailing)
 
-        self.assertEqual(result['success_count'], 0)
-        self.assertEqual(result['failed_count'], 2)
+        self.assertEqual(result["success_count"], 0)
+        self.assertEqual(result["failed_count"], 2)
         self.mailing.refresh_from_db()
-        self.assertEqual(self.mailing.status, 'failed')
+        self.assertEqual(self.mailing.status, "failed")
         self.assertFalse(self.mailing.is_sent)
 
     def test_update_status_from_started_to_completed(self):
@@ -351,27 +313,27 @@ class TestMailingServicesExtended(TestCase):
         # Устанавливаем даты в прошлом
         self.mailing.first_sent_at = timezone.now() - timezone.timedelta(days=2)
         self.mailing.end_at = timezone.now() - timezone.timedelta(days=1)
-        self.mailing.status = 'started'
+        self.mailing.status = "started"
         self.mailing.is_sent = False  # is_sent = False, чтобы метод работал
         self.mailing.save()
 
         result = self.service.update_status(self.mailing)
         self.assertTrue(result)
         self.mailing.refresh_from_db()
-        self.assertEqual(self.mailing.status, 'failed')
+        self.assertEqual(self.mailing.status, "failed")
 
     def test_update_status_to_failed(self):
         """Обновление статуса на failed (строки 95-109)"""
         self.mailing.first_sent_at = timezone.now() - timezone.timedelta(days=2)
         self.mailing.end_at = timezone.now() - timezone.timedelta(days=1)
-        self.mailing.status = 'started'
+        self.mailing.status = "started"
         self.mailing.is_sent = False
         self.mailing.save()
 
         result = self.service.update_status(self.mailing)
         self.assertTrue(result)
         self.mailing.refresh_from_db()
-        self.assertEqual(self.mailing.status, 'failed')
+        self.assertEqual(self.mailing.status, "failed")
 
     def test_update_status_no_change(self):
         """Статус не меняется (строки 95-109)"""
@@ -381,7 +343,7 @@ class TestMailingServicesExtended(TestCase):
         result = self.service.update_status(self.mailing)
         self.assertFalse(result)
 
-    @patch('mailings.services.EmailSender.send')
+    @patch("mailings.services.EmailSender.send")
     def test_send_to_client_creates_attempt(self, mock_send):
         """Отправка клиенту создает попытку (строки 62-68)"""
         mock_send.return_value = 1
@@ -389,31 +351,23 @@ class TestMailingServicesExtended(TestCase):
 
         attempt = MailingAttempt.objects.filter(mailing=self.mailing).first()
         self.assertIsNotNone(attempt)
-        self.assertEqual(attempt.status, 'success')
+        self.assertEqual(attempt.status, "success")
 
 
 class TestSendMailingCommandExtended(TestCase):
     """Дополнительные тесты для команды send_mailing (только тесты!)"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client_obj = ClientModel.objects.create(
-            email='test@test.com',
-            full_name='Test Client',
-            owner=self.user
-        )
-        self.message = Message.objects.create(
-            subject='Test Subject',
-            body='Test Body',
-            owner=self.user
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
+        self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
         self.mailing = Mailing.objects.create(
             first_sent_at=timezone.now() - timezone.timedelta(hours=1),
             end_at=timezone.now() + timezone.timedelta(hours=1),
             message=self.message,
             is_active=True,
             is_sent=False,
-            owner=self.user
+            owner=self.user,
         )
         self.mailing.recipients.add(self.client_obj)
 
@@ -438,73 +392,65 @@ class TestMailingsViewsExtended(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.other_user = User.objects.create_user(username='otheruser', password='otherpass')
-        self.message = Message.objects.create(
-            subject='Test Subject',
-            body='Test Body',
-            owner=self.user
-        )
-        self.client_obj = ClientModel.objects.create(
-            email='test@test.com',
-            full_name='Test Client',
-            owner=self.user
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.other_user = User.objects.create_user(username="otheruser", password="otherpass")
+        self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
+        self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
         self.mailing = Mailing.objects.create(
             first_sent_at=timezone.now() - timezone.timedelta(hours=1),
             end_at=timezone.now() + timezone.timedelta(hours=1),
             message=self.message,
             is_active=True,
             is_sent=False,
-            owner=self.user
+            owner=self.user,
         )
         self.mailing.recipients.add(self.client_obj)
 
     def test_mailing_list_view_queryset_filtering(self):
         """Проверка фильтрации queryset (строки 24, 26)"""
         self.client.force_login(self.user)
-        response = self.client.get('/mailings/')
+        response = self.client.get("/mailings/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, f"Рассылка #{self.mailing.id}")
 
         # Проверяем, что другие пользователи не видят чужие рассылки
         self.client.force_login(self.other_user)
-        response = self.client.get('/mailings/')
+        response = self.client.get("/mailings/")
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, f"Рассылка #{self.mailing.id}")
 
     def test_mailing_create_view_get(self):
         """GET запрос на создание (строки 53)"""
         self.client.force_login(self.user)
-        response = self.client.get('/mailings/create/')
+        response = self.client.get("/mailings/create/")
         self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response.context['form'], MailingForm)
+        self.assertIsInstance(response.context["form"], MailingForm)
 
     def test_mailing_update_view_post_with_errors(self):
         """Обновление с ошибками валидации (строки 74-77)"""
         self.client.force_login(self.user)
         data = {
-            'first_sent_at': '',
-            'end_at': '',
-            'message': '',
-            'recipients': [],
-            'is_active': True,
+            "first_sent_at": "",
+            "end_at": "",
+            "message": "",
+            "recipients": [],
+            "is_active": True,
         }
-        response = self.client.post(f'/mailings/{self.mailing.id}/update/', data)
+        response = self.client.post(f"/mailings/{self.mailing.id}/update/", data)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context['form'].errors)
+        self.assertTrue(response.context["form"].errors)
 
     def test_mailing_delete_view_post_success(self):
         """Успешное удаление (строки 140-146)"""
         self.client.force_login(self.user)
-        response = self.client.post(f'/mailings/{self.mailing.id}/delete/')
-        self.assertRedirects(response, '/mailings/')
+        response = self.client.post(f"/mailings/{self.mailing.id}/delete/")
+        self.assertRedirects(response, "/mailings/")
         self.assertEqual(Mailing.objects.count(), 0)
 
     def test_mailing_delete_view_other_user_403(self):
         """Чужой пользователь не может удалить (строки 140-146)"""
         self.client.force_login(self.other_user)
-        response = self.client.get(f'/mailings/{self.mailing.id}/delete/')
+        response = self.client.get(f"/mailings/{self.mailing.id}/delete/")
         self.assertEqual(response.status_code, 403)
 
 
@@ -512,24 +458,16 @@ class TestSendMailingCommandSimple(TestCase):
     """Простые тесты для команды send_mailing (без моков, строки 47-69, 78-83, 117-128)"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.client_obj = ClientModel.objects.create(
-            email='test@test.com',
-            full_name='Test Client',
-            owner=self.user
-        )
-        self.message = Message.objects.create(
-            subject='Test Subject',
-            body='Test Body',
-            owner=self.user
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
+        self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
         self.mailing = Mailing.objects.create(
             first_sent_at=timezone.now() - timezone.timedelta(hours=1),
             end_at=timezone.now() + timezone.timedelta(hours=1),
             message=self.message,
             is_active=True,
             is_sent=False,
-            owner=self.user
+            owner=self.user,
         )
         self.mailing.recipients.add(self.client_obj)
 

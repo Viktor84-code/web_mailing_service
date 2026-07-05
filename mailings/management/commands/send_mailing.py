@@ -26,7 +26,7 @@ class Command(BaseCommand):
             "mailing_id",
             type=int,
             nargs="?",
-            help="ID рассылки для отправки (если не указан - отправляются все активные)"
+            help="ID рассылки для отправки (если не указан - отправляются все активные)",
         )
 
     def handle(self, *args, **options):
@@ -46,9 +46,7 @@ class Command(BaseCommand):
             # Проверяем, можно ли отправить
             if not MailingService.can_send(mailing):
                 self.stdout.write(
-                    self.style.WARNING(
-                        f"Рассылка #{mailing_id} неактивна или не входит в интервал отправки"
-                    )
+                    self.style.WARNING(f"Рассылка #{mailing_id} неактивна или не входит в интервал отправки")
                 )
                 return
 
@@ -88,16 +86,11 @@ class Command(BaseCommand):
 
         # Ищем рассылки, которые можно отправить
         mailings = Mailing.objects.filter(
-            is_active=True,
-            is_sent=False,
-            first_sent_at__lte=now,
-            end_at__gte=now
+            is_active=True, is_sent=False, first_sent_at__lte=now, end_at__gte=now
         ).select_related("message")
 
         if not mailings.exists():
-            self.stdout.write(
-                self.style.WARNING("Нет активных рассылок для отправки")
-            )
+            self.stdout.write(self.style.WARNING("Нет активных рассылок для отправки"))
             return
 
         total_sent = 0
@@ -115,8 +108,8 @@ class Command(BaseCommand):
                 result = MailingService.send_mailing(mailing)
 
                 total_sent += 1
-                total_success_messages += result['success_count']
-                total_failed_messages += result['failed_count']
+                total_success_messages += result["success_count"]
+                total_failed_messages += result["failed_count"]
 
                 self.stdout.write(
                     self.style.SUCCESS(
@@ -132,11 +125,7 @@ class Command(BaseCommand):
 
             except Exception as e:
                 total_errors += 1
-                self.stdout.write(
-                    self.style.ERROR(
-                        f"Ошибка при отправке рассылки #{mailing.id}: {e}"
-                    )
-                )
+                self.stdout.write(self.style.ERROR(f"Ошибка при отправке рассылки #{mailing.id}: {e}"))
                 logger.error(f"Ошибка при отправке рассылки {mailing.id}: {e}")
 
         self.stdout.write(

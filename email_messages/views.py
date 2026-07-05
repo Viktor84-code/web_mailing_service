@@ -18,7 +18,7 @@ class OwnerOrManagerMixin(UserPassesTestMixin):
         user = self.request.user
         if user.is_superuser:
             return True
-        if user.groups.filter(name='Менеджер').exists():
+        if user.groups.filter(name="Менеджер").exists():
             return True
         return obj.owner == user
 
@@ -32,9 +32,10 @@ class MessageListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser or user.groups.filter(name='Менеджер').exists():
+        if user.is_superuser or user.groups.filter(name="Менеджер").exists():
             return Message.objects.all()
         return Message.objects.filter(owner=user)
+
 
 @method_decorator(cache_page(60 * 15), name="dispatch")
 class MessageDetailView(LoginRequiredMixin, OwnerOrManagerMixin, DetailView):
@@ -73,11 +74,3 @@ class MessageDeleteView(LoginRequiredMixin, OwnerOrManagerMixin, DeleteView):
     model = Message
     template_name = "email_messages/message_confirm_delete.html"
     success_url = reverse_lazy("email_messages:list")
-
-
-class MessageDetailView(LoginRequiredMixin, DetailView):
-    """Отображает детальную страницу сообщения."""
-
-    model = Message
-    template_name = "email_messages/message_detail.html"
-    context_object_name = "message"

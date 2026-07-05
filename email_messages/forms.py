@@ -9,48 +9,41 @@ class MessageForm(forms.ModelForm):
 
     class Meta:
         model = Message
-        fields = ['subject', 'body']
+        fields = ["subject", "body"]
         widgets = {
-            'subject': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Введите тему письма'
-            }),
-            'body': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 5,
-                'placeholder': 'Введите текст письма'
-            }),
+            "subject": forms.TextInput(attrs={"class": "form-control", "placeholder": "Введите тему письма"}),
+            "body": forms.Textarea(attrs={"class": "form-control", "rows": 5, "placeholder": "Введите текст письма"}),
         }
         labels = {
-            'subject': 'Тема',
-            'body': 'Текст письма',
+            "subject": "Тема",
+            "body": "Текст письма",
         }
         help_texts = {
-            'subject': 'Максимум 255 символов',
+            "subject": "Максимум 255 символов",
         }
 
     def clean_subject(self):
         """Валидация темы: не должна быть пустой или состоять только из пробелов."""
-        subject = self.cleaned_data.get('subject')
+        subject = self.cleaned_data.get("subject")
         if subject and not subject.strip():
-            raise ValidationError('Тема не может состоять только из пробелов')
+            raise ValidationError("Тема не может состоять только из пробелов")
         return subject
 
     def clean_body(self):
         """Валидация текста: не должен быть пустым."""
-        body = self.cleaned_data.get('body')
+        body = self.cleaned_data.get("body")
         if body and not body.strip():
-            raise ValidationError('Текст письма не может состоять только из пробелов')
+            raise ValidationError("Текст письма не может состоять только из пробелов")
         return body
 
     def clean(self):
         """Общая валидация формы."""
         cleaned_data = super().clean()
-        subject = cleaned_data.get('subject')
-        body = cleaned_data.get('body')
+        subject = cleaned_data.get("subject")
+        body = cleaned_data.get("body")
 
         # Проверка что оба поля заполнены
         if not subject and not body:
-            raise ValidationError('Заполните хотя бы одно поле')
+            raise ValidationError("Заполните хотя бы одно поле")
 
         return cleaned_data
