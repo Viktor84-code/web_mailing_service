@@ -3,12 +3,14 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
 
 from clients.models import Client
 from mailings.models import Mailing
 
 
-@cache_page(60 * 5)  # Кэшировать на 5 минут
+@cache_page(60 * 5)
+@vary_on_headers('Cookie')
 @login_required
 def home(request):
     """Отображает главную страницу со статистикой."""

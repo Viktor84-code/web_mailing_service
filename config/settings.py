@@ -161,3 +161,26 @@ STATICFILES_DIRS = [
 
 # Кэширование статики на 1 год (в проде)
 WHITENOISE_MAX_AGE = 31536000  # 1 год
+
+# Celery settings
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'global_keyprefix': None,
+    'visibility_timeout': 3600,
+}
+
+# Принудительно используем старый протокол RESP2
+CELERY_REDIS_BACKEND_USE_SSL = False
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Europe/Moscow'
+
+CELERY_BEAT_SCHEDULE = {
+    'check-mailings-every-minute': {
+        'task': 'mailings.tasks.check_mailings',
+        'schedule': 60.0,
+    },
+}

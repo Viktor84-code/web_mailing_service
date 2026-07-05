@@ -1,4 +1,5 @@
 import pytest
+from django.contrib.auth.models import User
 from django.urls import reverse
 
 from email_messages.models import Message
@@ -8,13 +9,22 @@ from email_messages.models import Message
 class TestMessages:
 
     def test_message_creation(self):
-        message = Message.objects.create(subject="Test Subject", body="Test Body")
+        user = User.objects.create_user(username='testuser', password='testpass')
+        message = Message.objects.create(
+            subject="Test Subject",
+            body="Test Body",
+            owner=user
+        )
         assert message.subject == "Test Subject"
         assert str(message) == "Test Subject"
 
     def test_message_list_view(self, client):
-        Message.objects.create(subject="A", body="A body")
-        Message.objects.create(subject="B", body="B body")
+        user = User.objects.create_user(username='testuser', password='testpass')
+        client.login(username='testuser', password='testpass')
+
+        Message.objects.create(subject="A", body="A body", owner=user)
+        Message.objects.create(subject="B", body="B body", owner=user)
+
         url = reverse("email_messages:list")
         response = client.get(url)
         assert response.status_code == 200
