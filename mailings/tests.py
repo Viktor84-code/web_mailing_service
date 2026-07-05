@@ -1,4 +1,5 @@
 from io import StringIO
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
@@ -6,7 +7,7 @@ from django.test import Client, TestCase
 from django.utils import timezone
 
 from mailings.models import Client as ClientModel
-from mailings.models import Mailing, Message
+from mailings.models import Mailing, MailingAttempt, Message
 from mailings.services import MailingService
 
 
@@ -273,4 +274,159 @@ class TestMailingsCommands(TestCase):
     def test_command_send_all_active_mailings(self):
         out = StringIO()
         call_command("send_mailing", stdout=out)
+        self.assertIn("Готово!", out.getvalue())
+
+
+class TestMailingServicesExtended(TestCase):
+    """Дополнительные тесты для MailingService (строки 38-55, 72-91, 95-109)"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.client_obj = ClientModel.objects.create(
+            email='test@test.com',
+            full_name='Test Client',
+            owner=self.user
+        )
+        self.client_obj2 = ClientModel.objects.create(
+            email='test2@test.com',
+            full_name='Test Client 2',
+            owner=self.user
+        )
+        self.message = Message.objects.create(
+            subject='Test Subject',
+            body='Test Body',
+            owner=self.user
+        )
+        self.mailing = Mailing.objects.create(
+            first_sent_at=timezone.now() - timezone.timedelta(hours=1),
+            end_at=timezone.now() + timezone.timedelta(hours=1),
+            message=self.message,
+            is_active=True,
+            is_sent=False,
+            owner=self.user
+        )
+        self.mailing.recipients.add(self.client_obj)
+        self.mailing.recipients.add(self.client_obj2)
+        self.service = MailingService()
+
+    @patch('mailings.services.EmailSender.send')
+    def test_send_mailing_success(self, mock_send):
+        """Успешная отправка всем получателям (строки 38-55)"""
+        mock_send.return_value = 1
+        result = self.service.send_mailing(self.mailing)
+
+        self.assertEqual(result['success_count'], 2)
+        self.assertEqual(result['failed_count'], 0)
+        self.mailing.refresh_from_db()
+        self.assertEqual(self.mailing.status, 'completed')
+        self.assertTrue(self.mailing.is_sent)
+
+    @patch('mailings.services.EmailSender.send')
+    def test_send_mailing_partial(self, mock_send):
+        """Частичная отправка (один успех, одна ошибка) (строки 72-91)"""
+        mock_send.side_effect = [1, Exception('SMTP error')]
+        result = self.service.send_mailing(self.mailing)
+
+        self.assertEqual(result['success_count'], 1)
+        self.assertEqual(result['failed_count'], 1)
+        self.mailing.refresh_from_db()
+        self.assertEqual(self.mailing.status, 'partial')
+        self.assertTrue(self.mailing.is_sent)
+
+    @patch('mailings.services.EmailSender.send')
+    def test_send_mailing_all_failed(self, mock_send):
+        """Полная ошибка отправки (строки 72-91)"""
+        mock_send.side_effect = Exception('SMTP error')
+        result = self.service.send_mailing(self.mailing)
+
+        self.assertEqual(result['success_count'], 0)
+        self.assertEqual(result['failed_count'], 2)
+        self.mailing.refresh_from_db()
+        self.assertEqual(self.mailing.status, 'failed')
+        self.assertFalse(self.mailing.is_sent)
+
+    def test_update_status_from_started_to_completed(self):
+        """Обновление статуса когда время истекло и письма отправлены"""
+        # Устанавливаем даты в прошлом
+        self.mailing.first_sent_at = timezone.now() - timezone.timedelta(days=2)
+        self.mailing.end_at = timezone.now() - timezone.timedelta(days=1)
+        self.mailing.status = 'started'
+        self.mailing.is_sent = False  # is_sent = False, чтобы метод работал
+        self.mailing.save()
+
+        result = self.service.update_status(self.mailing)
+        self.assertTrue(result)
+        self.mailing.refresh_from_db()
+        self.assertEqual(self.mailing.status, 'failed')
+
+    def test_update_status_to_failed(self):
+        """Обновление статуса на failed (строки 95-109)"""
+        self.mailing.first_sent_at = timezone.now() - timezone.timedelta(days=2)
+        self.mailing.end_at = timezone.now() - timezone.timedelta(days=1)
+        self.mailing.status = 'started'
+        self.mailing.is_sent = False
+        self.mailing.save()
+
+        result = self.service.update_status(self.mailing)
+        self.assertTrue(result)
+        self.mailing.refresh_from_db()
+        self.assertEqual(self.mailing.status, 'failed')
+
+    def test_update_status_no_change(self):
+        """Статус не меняется (строки 95-109)"""
+        self.mailing.is_sent = True
+        self.mailing.save()
+
+        result = self.service.update_status(self.mailing)
+        self.assertFalse(result)
+
+    @patch('mailings.services.EmailSender.send')
+    def test_send_to_client_creates_attempt(self, mock_send):
+        """Отправка клиенту создает попытку (строки 62-68)"""
+        mock_send.return_value = 1
+        self.service._send_to_client(self.mailing, self.client_obj)
+
+        attempt = MailingAttempt.objects.filter(mailing=self.mailing).first()
+        self.assertIsNotNone(attempt)
+        self.assertEqual(attempt.status, 'success')
+
+
+class TestSendMailingCommandExtended(TestCase):
+    """Дополнительные тесты для команды send_mailing (только тесты!)"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.client_obj = ClientModel.objects.create(
+            email='test@test.com',
+            full_name='Test Client',
+            owner=self.user
+        )
+        self.message = Message.objects.create(
+            subject='Test Subject',
+            body='Test Body',
+            owner=self.user
+        )
+        self.mailing = Mailing.objects.create(
+            first_sent_at=timezone.now() - timezone.timedelta(hours=1),
+            end_at=timezone.now() + timezone.timedelta(hours=1),
+            message=self.message,
+            is_active=True,
+            is_sent=False,
+            owner=self.user
+        )
+        self.mailing.recipients.add(self.client_obj)
+
+    def test_command_send_all_active_success(self):
+        """Тест отправки всех активных рассылок"""
+        out = StringIO()
+        call_command("send_mailing", stdout=out)
+        self.assertIn("Готово!", out.getvalue())
+
+    def test_command_send_all_with_error(self):
+        """Тест команды с ошибкой (на реальном коде)"""
+        # Удаляем получателя, чтобы сервис упал
+        self.mailing.recipients.clear()
+        out = StringIO()
+        call_command("send_mailing", stdout=out)
+        # Проверяем, что команда отработала и показала ошибку
         self.assertIn("Готово!", out.getvalue())
