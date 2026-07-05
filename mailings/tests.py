@@ -6,6 +6,7 @@ from django.core.management import call_command
 from django.test import Client, TestCase
 from django.utils import timezone
 
+from mailings.forms import MailingForm
 from mailings.models import Client as ClientModel
 from mailings.models import Mailing, MailingAttempt, Message
 from mailings.services import MailingService
@@ -429,4 +430,125 @@ class TestSendMailingCommandExtended(TestCase):
         out = StringIO()
         call_command("send_mailing", stdout=out)
         # Проверяем, что команда отработала и показала ошибку
+        self.assertIn("Готово!", out.getvalue())
+
+
+class TestMailingsViewsExtended(TestCase):
+    """Дополнительные тесты для вьюх mailings (строки 24, 26, 37, 39, 53, 74-77, 89-90, 115-136, 140-146)"""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.other_user = User.objects.create_user(username='otheruser', password='otherpass')
+        self.message = Message.objects.create(
+            subject='Test Subject',
+            body='Test Body',
+            owner=self.user
+        )
+        self.client_obj = ClientModel.objects.create(
+            email='test@test.com',
+            full_name='Test Client',
+            owner=self.user
+        )
+        self.mailing = Mailing.objects.create(
+            first_sent_at=timezone.now() - timezone.timedelta(hours=1),
+            end_at=timezone.now() + timezone.timedelta(hours=1),
+            message=self.message,
+            is_active=True,
+            is_sent=False,
+            owner=self.user
+        )
+        self.mailing.recipients.add(self.client_obj)
+
+    def test_mailing_list_view_queryset_filtering(self):
+        """Проверка фильтрации queryset (строки 24, 26)"""
+        self.client.force_login(self.user)
+        response = self.client.get('/mailings/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f"Рассылка #{self.mailing.id}")
+
+        # Проверяем, что другие пользователи не видят чужие рассылки
+        self.client.force_login(self.other_user)
+        response = self.client.get('/mailings/')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, f"Рассылка #{self.mailing.id}")
+
+    def test_mailing_create_view_get(self):
+        """GET запрос на создание (строки 53)"""
+        self.client.force_login(self.user)
+        response = self.client.get('/mailings/create/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.context['form'], MailingForm)
+
+    def test_mailing_update_view_post_with_errors(self):
+        """Обновление с ошибками валидации (строки 74-77)"""
+        self.client.force_login(self.user)
+        data = {
+            'first_sent_at': '',
+            'end_at': '',
+            'message': '',
+            'recipients': [],
+            'is_active': True,
+        }
+        response = self.client.post(f'/mailings/{self.mailing.id}/update/', data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['form'].errors)
+
+    def test_mailing_delete_view_post_success(self):
+        """Успешное удаление (строки 140-146)"""
+        self.client.force_login(self.user)
+        response = self.client.post(f'/mailings/{self.mailing.id}/delete/')
+        self.assertRedirects(response, '/mailings/')
+        self.assertEqual(Mailing.objects.count(), 0)
+
+    def test_mailing_delete_view_other_user_403(self):
+        """Чужой пользователь не может удалить (строки 140-146)"""
+        self.client.force_login(self.other_user)
+        response = self.client.get(f'/mailings/{self.mailing.id}/delete/')
+        self.assertEqual(response.status_code, 403)
+
+
+class TestSendMailingCommandSimple(TestCase):
+    """Простые тесты для команды send_mailing (без моков, строки 47-69, 78-83, 117-128)"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.client_obj = ClientModel.objects.create(
+            email='test@test.com',
+            full_name='Test Client',
+            owner=self.user
+        )
+        self.message = Message.objects.create(
+            subject='Test Subject',
+            body='Test Body',
+            owner=self.user
+        )
+        self.mailing = Mailing.objects.create(
+            first_sent_at=timezone.now() - timezone.timedelta(hours=1),
+            end_at=timezone.now() + timezone.timedelta(hours=1),
+            message=self.message,
+            is_active=True,
+            is_sent=False,
+            owner=self.user
+        )
+        self.mailing.recipients.add(self.client_obj)
+
+    def test_command_send_single_mailing_not_found(self):
+        """Команда с несуществующим ID (строки 47-69)"""
+        out = StringIO()
+        call_command("send_mailing", "999", stdout=out)
+        self.assertIn("Рассылка #999 не найдена", out.getvalue())
+
+    def test_command_send_all_active_mailings_empty(self):
+        """Команда когда нет активных рассылок (строки 78-83)"""
+        Mailing.objects.all().delete()
+        out = StringIO()
+        call_command("send_mailing", stdout=out)
+        self.assertIn("Нет активных рассылок для отправки", out.getvalue())
+
+    def test_command_send_all_active_mailings_with_data(self):
+        """Команда с активными рассылками (строки 78-83, 117-128)"""
+        out = StringIO()
+        call_command("send_mailing", stdout=out)
+        # Проверяем, что команда отработала
         self.assertIn("Готово!", out.getvalue())
