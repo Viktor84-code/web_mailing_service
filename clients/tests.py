@@ -1,8 +1,10 @@
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from clients.models import Client
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -14,8 +16,8 @@ class TestClients:
         assert str(client) == "Test User <test@example.com>"
 
     def test_client_list_view(self, client):
-        user = User.objects.create_user(username="testuser", password="testpass")
-        client.login(username="testuser", password="testpass")
+        user = User.objects.create_user(email="testuser@test.com", password="testpass")
+        client.login(email="testuser@test.com", password="testpass")
 
         Client.objects.create(email="a@a.com", full_name="A", owner=user)
         Client.objects.create(email="b@b.com", full_name="B", owner=user)
@@ -31,8 +33,8 @@ class TestClientsViewsExtended:
 
     def test_client_create_view_post_invalid(self, client):
         """Тест создания клиента с невалидными данными (строки 28-34)"""
-        User.objects.create_user(username="testuser", password="testpass")
-        client.login(username="testuser", password="testpass")
+        User.objects.create_user(email="testuser@test.com", password="testpass")
+        client.login(email="testuser@test.com", password="testpass")
 
         # Отправляем пустые данные (невалидная форма)
         data = {
@@ -45,8 +47,8 @@ class TestClientsViewsExtended:
 
     def test_client_create_view_post_valid_with_owner(self, client):
         """Тест создания клиента с owner (строки 15-21)"""
-        user = User.objects.create_user(username="testuser", password="testpass")
-        client.login(username="testuser", password="testpass")
+        user = User.objects.create_user(email="testuser@test.com", password="testpass")
+        client.login(email="testuser@test.com", password="testpass")
 
         data = {
             "email": "new@test.com",
@@ -62,11 +64,11 @@ class TestClientsViewsExtended:
 
     def test_client_update_view_post_valid(self, client):
         """Тест обновления клиента (строки 45-48)"""
-        user = User.objects.create_user(username="testuser", password="testpass")
+        user = User.objects.create_user(email="testuser@test.com", password="testpass")
         client_obj = Client.objects.create(
             email="test@test.com", full_name="Test Client", comment="Old comment", owner=user
         )
-        client.login(username="testuser", password="testpass")
+        client.login(email="testuser@test.com", password="testpass")
 
         data = {
             "email": "updated@test.com",
@@ -83,11 +85,11 @@ class TestClientsViewsExtended:
 
     def test_client_update_view_post_invalid(self, client):
         """Тест обновления клиента с невалидными данными (строки 45-48)"""
-        user = User.objects.create_user(username="testuser", password="testpass")
+        user = User.objects.create_user(email="testuser@test.com", password="testpass")
         client_obj = Client.objects.create(
             email="test@test.com", full_name="Test Client", comment="Old comment", owner=user
         )
-        client.login(username="testuser", password="testpass")
+        client.login(email="testuser@test.com", password="testpass")
 
         # Отправляем пустые данные
         data = {
@@ -100,22 +102,22 @@ class TestClientsViewsExtended:
 
     def test_client_delete_view_get(self, client):
         """Тест GET запроса на удаление (строки 60-61)"""
-        user = User.objects.create_user(username="testuser", password="testpass")
+        user = User.objects.create_user(email="testuser@test.com", password="testpass")
         client_obj = Client.objects.create(
             email="test@test.com", full_name="Test Client", comment="Test comment", owner=user
         )
-        client.login(username="testuser", password="testpass")
+        client.login(email="testuser@test.com", password="testpass")
 
         response = client.get(f"/clients/{client_obj.id}/delete/")
         assert response.status_code == 200  # страница подтверждения удаления
 
     def test_client_delete_view_post(self, client):
         """Тест POST запроса на удаление (строки 60-61)"""
-        user = User.objects.create_user(username="testuser", password="testpass")
+        user = User.objects.create_user(email="testuser@test.com", password="testpass")
         client_obj = Client.objects.create(
             email="test@test.com", full_name="Test Client", comment="Test comment", owner=user
         )
-        client.login(username="testuser", password="testpass")
+        client.login(email="testuser@test.com", password="testpass")
 
         response = client.post(f"/clients/{client_obj.id}/delete/")
         assert response.status_code == 302  # редирект после удаления
@@ -126,8 +128,8 @@ class TestClientsViewsExtended:
 
     def test_client_list_view_ordering(self, client):
         """Тест сортировки списка клиентов (строки 15-21)"""
-        user = User.objects.create_user(username="testuser", password="testpass")
-        client.login(username="testuser", password="testpass")
+        user = User.objects.create_user(email="testuser@test.com", password="testpass")
+        client.login(email="testuser@test.com", password="testpass")
 
         Client.objects.create(email="b@test.com", full_name="B Client", owner=user)
         Client.objects.create(email="a@test.com", full_name="A Client", owner=user)

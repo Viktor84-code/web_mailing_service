@@ -62,7 +62,7 @@ class UserListView(LoginRequiredMixin, ManagerRequiredMixin, ListView):
     def get_queryset(self):
         """Исключаем суперпользователей из списка."""
         queryset = super().get_queryset()
-        return queryset.filter(is_superuser=False).order_by("username")
+        return queryset.filter(is_superuser=False).order_by("email")
 
 
 class UserToggleBlockView(LoginRequiredMixin, ManagerRequiredMixin, View):

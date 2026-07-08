@@ -1,7 +1,7 @@
 from io import StringIO
 from unittest.mock import patch
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import Client, TestCase
 from django.utils import timezone
@@ -11,12 +11,14 @@ from mailings.models import Client as ClientModel
 from mailings.models import Mailing, MailingAttempt, Message
 from mailings.services import MailingService
 
+User = get_user_model()
+
 
 class TestMailingModel(TestCase):
     """Тесты для модели Mailing"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.user = User.objects.create_user(email="testuser@test.com", password="testpass")
         self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
 
     def test_mailing_str_method(self):
@@ -51,7 +53,7 @@ class TestMailingServices(TestCase):
     """Тесты для MailingService"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.user = User.objects.create_user(email="testuser@test.com", password="testpass")
         self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
         self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
         self.mailing = Mailing.objects.create(
@@ -129,8 +131,8 @@ class TestMailingsViews(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass")
-        self.other_user = User.objects.create_user(username="otheruser", password="otherpass")
+        self.user = User.objects.create_user(email="testuser@test.com", password="testpass")
+        self.other_user = User.objects.create_user(email="otheruser@test.com", password="otherpass")
         self.message = Message.objects.create(subject="Test", body="Test", owner=self.user)
         self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
         self.mailing = Mailing.objects.create(
@@ -220,7 +222,7 @@ class TestMailingsCommands(TestCase):
     """Тесты для команд управления рассылками"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.user = User.objects.create_user(email="testuser@test.com", password="testpass")
         self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
         self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
         self.mailing = Mailing.objects.create(
@@ -254,7 +256,7 @@ class TestMailingServicesExtended(TestCase):
     """Дополнительные тесты для MailingService (строки 38-55, 72-91, 95-109)"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.user = User.objects.create_user(email="testuser@test.com", password="testpass")
         self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
         self.client_obj2 = ClientModel.objects.create(
             email="test2@test.com", full_name="Test Client 2", owner=self.user
@@ -358,7 +360,7 @@ class TestSendMailingCommandExtended(TestCase):
     """Дополнительные тесты для команды send_mailing (только тесты!)"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.user = User.objects.create_user(email="testuser@test.com", password="testpass")
         self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
         self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
         self.mailing = Mailing.objects.create(
@@ -392,8 +394,8 @@ class TestMailingsViewsExtended(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass")
-        self.other_user = User.objects.create_user(username="otheruser", password="otherpass")
+        self.user = User.objects.create_user(email="testuser@test.com", password="testpass")
+        self.other_user = User.objects.create_user(email="otheruser@test.com", password="otherpass")
         self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
         self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
         self.mailing = Mailing.objects.create(
@@ -458,7 +460,7 @@ class TestSendMailingCommandSimple(TestCase):
     """Простые тесты для команды send_mailing (без моков, строки 47-69, 78-83, 117-128)"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.user = User.objects.create_user(email="testuser@test.com", password="testpass")
         self.client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=self.user)
         self.message = Message.objects.create(subject="Test Subject", body="Test Body", owner=self.user)
         self.mailing = Mailing.objects.create(

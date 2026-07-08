@@ -1,11 +1,14 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from mailings.models import Client as ClientModel, Mailing, Message
+from mailings.models import Client as ClientModel
+from mailings.models import Mailing, Message
 from mailings.tasks import check_mailings
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -14,7 +17,7 @@ class TestMailingsTasks:
     @patch("mailings.tasks.MailingService")
     def test_check_mailings(self, MockMailingService):
         """Тест задачи check_mailings с моком сервиса"""
-        user = User.objects.create_user(username="testuser", password="testpass")
+        user = User.objects.create_user(email="testuser@test.com", password="testpass")
         client_obj = ClientModel.objects.create(email="test@test.com", full_name="Test Client", owner=user)
         message = Message.objects.create(subject="Test Subject", body="Test Body", owner=user)
         mailing = Mailing.objects.create(

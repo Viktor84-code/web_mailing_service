@@ -19,7 +19,7 @@ class UserService:
         """
         try:
             user = form.save()
-            logger.info(f"Создан новый пользователь: { user.email } (ID: {user.id})")
+            logger.info(f"Создан новый пользователь: {user.email} (ID: {user.id})")
             return user
         except Exception as e:
             logger.error(f"Ошибка при создании пользователя: {e}")

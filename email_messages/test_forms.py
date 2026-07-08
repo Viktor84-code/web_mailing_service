@@ -1,8 +1,10 @@
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from email_messages.forms import MessageForm
 from email_messages.models import Message
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -37,7 +39,7 @@ class TestMessageForm:
         assert "body" in form.errors
 
     def test_form_save_with_owner(self):
-        user = User.objects.create_user(username="testuser", password="testpass")
+        user = User.objects.create_user(email="testuser@test.com", password="testpass")
         form = MessageForm(
             data={
                 "subject": "Test Subject",
