@@ -17,7 +17,7 @@
                     <strong>{{ client.full_name|default:"Без имени" }}</strong>
                     <span class="text-muted ms-2">{{ client.email }}</span>
                     {% if request.user.is_superuser or request.user.groups.all.0.name == 'Менеджер' %}
-                        <span class="badge bg-info ms-2">Владелец: {{ client.owner }}</span>
+                        <span class="badge bg-info ms-2">Владелец: {{ client.owner.email }}</span>
                     {% endif %}
                 </div>
                 <div>

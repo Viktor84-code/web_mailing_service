@@ -28,7 +28,7 @@
                     <p><strong>Дата начала:</strong> {{ mailing.first_sent_at|date:"d.m.Y H:i" }}</p>
                     <p><strong>Дата окончания:</strong> {{ mailing.end_at|date:"d.m.Y H:i" }}</p>
                     <p><strong>Создана:</strong> {{ mailing.created_at|date:"d.m.Y H:i" }}</p>
-                    <p><strong>Владелец:</strong> {{ mailing.owner }}</p>
+                    <p><strong>Владелец:</strong> {{ mailing.owner.email }} </p>
                     <p><strong>Активна:</strong>
                         {% if mailing.is_active %}
                             <span class="badge bg-success">Да</span>

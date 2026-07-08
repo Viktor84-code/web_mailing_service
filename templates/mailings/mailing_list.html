@@ -39,7 +39,7 @@
                         </small>
                         {% if user.is_superuser or user.groups.all.0.name == 'Менеджер' %}
                             <br>
-                            <small class="text-muted">Владелец: {{ mailing.owner }}</small>
+                            <small class="text-muted">Владелец: {{ mailing.owner.email }}</small>
                         {% endif %}
                     </div>
                     <div>
