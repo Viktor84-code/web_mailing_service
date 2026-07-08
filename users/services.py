@@ -19,7 +19,7 @@ class UserService:
         """
         try:
             user = form.save()
-            logger.info(f"Создан новый пользователь: {user.username} (ID: {user.id})")
+            logger.info(f"Создан новый пользователь: { user.email } (ID: {user.id})")
             return user
         except Exception as e:
             logger.error(f"Ошибка при создании пользователя: {e}")
@@ -31,7 +31,7 @@ class UserService:
         Авторизует пользователя.
         """
         login(request, user)
-        logger.info(f"Пользователь {user.username} авторизован")
+        logger.info(f"Пользователь {user.email} авторизован")
 
     @staticmethod
     def get_profile_stats(user):
