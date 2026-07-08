@@ -29,7 +29,7 @@ SECRET_KEY = "django-insecure-9fjme8bautlh@f=r$aqwvi5@940waq$#8zu(%ec=fly*s7@avh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = list[str] = []
+ALLOWED_HOSTS: list[str] = []
 
 # Application definition
 
@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     "mailings",
     "users",
 ]
+
+AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
