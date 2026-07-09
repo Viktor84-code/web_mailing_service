@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Клиенты</h1>
+        <a href="{% url 'clients:create' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Добавить клиента
+        </a>
+    </div>
+
+    {% if clients %}
+        <div class="list-group">
+            {% for client in clients %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ client.full_name|default:"Без имени" }}</strong>
+                    <span class="text-muted ms-2">{{ client.email }}</span>
+                    {% if request.user.is_superuser or request.user.groups.all.0.name == 'Менеджер' %}
+                        <span class="badge bg-info ms-2">Владелец: {{ client.owner.email }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <a href="{% url 'clients:update' client.pk %}" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-edit"></i> Ред
+                    </a>
+                    <a href="{% url 'clients:delete' client.pk %}" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-trash"></i> Уд
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1">&laquo; Первая</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a></li>
+                    {% endif %}
+
+                    <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info mt-3">
+            <p class="mb-0">У вас пока нет клиентов.</p>
+            <a href="{% url 'clients:create' %}" class="btn btn-success mt-2">Создать первого клиента</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

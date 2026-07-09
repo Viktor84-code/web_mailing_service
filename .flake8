@@ -1,0 +1,25 @@
+[flake8]
+max-line-length = 120
+exclude =
+    .venv,
+    .git,
+    __pycache__,
+    migrations,
+    manage.py,
+    config/settings.py,
+    staticfiles,
+    .idea,
+    mailings/migrations,
+    clients/migrations,
+    email_messages/migrations,
+    main/migrations
+ignore =
+    D100,
+    D101,
+    D102,
+    D103,
+    D104,
+    D105,
+    D106,
+    W503,
+    E203

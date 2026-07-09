@@ -1,0 +1,10 @@
+[33md563b3a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/homework-4[m[33m, [m[1;31morigin/feature/homework-4[m[33m)[m final: project completed, all tests passed (63), coverage 85%, README updated
+[33mfecdf35[m tests: 63 passed, покрытие 85%, проект готов
+[33ma15b658[m tests: 46 passed, покрытие 84%
+[33m4416614[m fix: Исправлены тесты mailings, все 26 passed, покрытие 66%
+[33m56381c6[m Add full caching: Redis, template cache, static cache
+[33m9e2de67[m Fix email sending: add DEFAULT_FROM_EMAIL, remove time validation for manual send
+[33m84aca55[m Рефакторинг: добавлены миграции, исправлены модели, вьюхи, шаблоны, сервисы
+[33me3c38b5[m Add manager permissions: view all clients, mailings, messages; disable editing for managers; block users via admin; toggle mailings
+[33m54f2ea3[m Pre-group commit: working authentication and owner filters
+[33m03918d8[m Add authentication and logout fix, owner field in models, statistics in profile
