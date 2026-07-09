@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Рассылка #{{ mailing.id }}</h4>
+            <span class="badge
+                {% if mailing.status == 'created' %}bg-secondary
+                {% elif mailing.status == 'started' %}bg-primary
+                {% elif mailing.status == 'partial' %}bg-warning
+                {% elif mailing.status == 'completed' %}bg-success
+                {% elif mailing.status == 'failed' %}bg-danger
+                {% endif %}">
+                {{ mailing.get_status_display }}
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <p><strong>Тема сообщения:</strong> {{ mailing.message.subject }}</p>
+                    <p><strong>Текст сообщения:</strong></p>
+                    <div class="border p-3 bg-light rounded">
+                        {{ mailing.message.body|linebreaks }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Дата начала:</strong> {{ mailing.first_sent_at|date:"d.m.Y H:i" }}</p>
+                    <p><strong>Дата окончания:</strong> {{ mailing.end_at|date:"d.m.Y H:i" }}</p>
+                    <p><strong>Создана:</strong> {{ mailing.created_at|date:"d.m.Y H:i" }}</p>
+                    <p><strong>Владелец:</strong> {{ mailing.owner.email }} </p>
+                    <p><strong>Активна:</strong>
+                        {% if mailing.is_active %}
+                            <span class="badge bg-success">Да</span>
+                        {% else %}
+                            <span class="badge bg-danger">Нет</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Отправлена:</strong>
+                        {% if mailing.is_sent %}
+                            <span class="badge bg-success">Да</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Нет</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Количество получателей:</strong> {{ mailing.recipients.count }}</p>
+                </div>
+            </div>
+
+            <h5>Получатели:</h5>
+            <ul class="list-group mb-3">
+                {% for client in mailing.recipients.all %}
+                <li class="list-group-item">{{ client.full_name|default:client.email }} - {{ client.email }}</li>
+                {% empty %}
+                <li class="list-group-item text-muted">Нет получателей</li>
+                {% endfor %}
+            </ul>
+
+            {% if mailing.attempts.exists %}
+                <h5>Попытки отправки:</h5>
+                <ul class="list-group mb-3">
+                    {% for attempt in mailing.attempts.all|slice:":10" %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            {{ attempt.attempt_time|date:"d.m.Y H:i:s" }}
+                            -
+                            <span class="badge {% if attempt.status == 'success' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ attempt.get_status_display }}
+                            </span>
+                        </span>
+                        <span class="text-muted small">{{ attempt.server_response|truncatechars:50 }}</span>
+                    </li>
+                    {% endfor %}
+                    {% if mailing.attempts.count > 10 %}
+                        <li class="list-group-item text-muted">... и еще {{ mailing.attempts.count|add:"-10" }} попыток</li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+
+            <div>
+                {% if user.is_superuser or user.groups.all.0.name == 'Менеджер' or mailing.owner == user %}
+                    <a href="{% url 'mailings:update' mailing.pk %}" class="btn btn-outline-success">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                    <a href="{% url 'mailings:delete' mailing.pk %}" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Удалить
+                    </a>
+                    {% if mailing.status != 'completed' and mailing.status != 'failed' and not mailing.is_sent %}
+                        <form method="post" action="{% url 'mailings:send' mailing.pk %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane"></i> Отправить сейчас
+                            </button>
+                        </form>
+                    {% endif %}
+                {% endif %}
+                <a href="{% url 'mailings:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Назад к списку
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Выход из системы{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Выход из системы</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h5 class="card-title">Вы успешно вышли из системы</h5>
+                    <p class="card-text text-muted">Спасибо, что пользовались нашим сервисом.</p>
+
+                    <div class="mt-3">
+                        <a href="{% url 'users:login' %}" class="btn btn-success">
+                            <i class="fas fa-sign-in-alt"></i> Войти снова
+                        </a>
+                        <a href="{% url 'main:home' %}" class="btn btn-secondary">
+                            <i class="fas fa-home"></i> На главную
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

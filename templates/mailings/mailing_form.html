@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">
+                {% if object %}
+                    Редактирование рассылки #{{ object.id }}
+                {% else %}
+                    Создание новой рассылки
+                {% endif %}
+            </h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% if object and object.is_sent %}
+                    <div class="alert alert-warning">
+                        <strong>Внимание!</strong> Эта рассылка уже отправлена. Редактирование может повлиять на уже отправленные письма.
+                    </div>
+                {% endif %}
+
+                {{ form.as_p }}
+
+                <div class="mb-3 text-muted">
+                    <small>Владелец: {{ request.user }}</small>
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> Сохранить
+                </button>
+                <a href="{% url 'mailings:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
